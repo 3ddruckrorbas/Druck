@@ -127,6 +127,7 @@
 
         const EMAIL_RECIPIENT = "3d.druck.rorbas@gmail.com";
         const CUSTOM_FILAMENT_SURCHARGE = 3.00;
+        const FORMSPREE_ENDPOINT = "https://formspree.io/f/xjgevaln";
         
         const ViewState = {
             HOME: 'HOME',
@@ -408,46 +409,50 @@
                 e.preventDefault();
                 setIsSubmitting(true);
 
-                // Prepare email body
+                // Prepare FormData for Formspree
+                const data = new FormData();
+                data.append('Name', formData.userName);
+                data.append('Email', formData.userEmail);
+                data.append('Telefon', formData.userPhone || 'Nicht angegeben');
+                data.append('Beschreibung', formData.projectDescription);
+
+                // Material Logic
                 const selectedStock = STOCK_FILAMENTS.find(f => f.id === formData.selectedFilamentId);
-                
-                const filamentText = formData.filamentMode === 'stock' && selectedStock
-                    ? `Lager-Filament: ${selectedStock.name} (${selectedStock.material})`
-                    : `Spezialwunsch (+${CUSTOM_FILAMENT_SURCHARGE} CHF): ${formData.customFilamentRequest}`;
+                let materialText = "";
+                if (formData.filamentMode === 'stock' && selectedStock) {
+                    materialText = `Lager-Filament: ${selectedStock.name} (${selectedStock.material})`;
+                } else {
+                    materialText = `Spezialwunsch: ${formData.customFilamentRequest}`;
+                }
+                data.append('Material', materialText);
 
-                const fileNote = attachedFile 
-                    ? `\n\n--- ANHANG ---\nDateiname: ${attachedFile.name}\n(Hinweis: Die Datei muss im E-Mail-Programm manuell angehängt werden)` 
-                    : '';
+                // File
+                if (attachedFile) {
+                    data.append('Anhang', attachedFile);
+                }
 
-                const subject = `Neue 3D-Druck Anfrage von ${formData.userName}`;
-                const body = `
-Hallo Enrique und Jack,
+                // Send to Formspree
+                try {
+                    const response = await fetch(FORMSPREE_ENDPOINT, {
+                        method: "POST",
+                        body: data,
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    });
 
-Ich habe eine neue Anfrage für einen 3D-Druck:
-
---- PROJEKT ---
-${formData.projectDescription}
-${fileNote}
-
---- MATERIAL ---
-${filamentText}
-
---- KONTAKT ---
-Name: ${formData.userName}
-Email: ${formData.userEmail}
-Telefon: ${formData.userPhone || 'Nicht angegeben'}
-
-Bitte meldet euch bei mir!
-                `.trim();
-
-                // Simulate network request nicely
-                await new Promise(resolve => setTimeout(resolve, 1500));
-
-                // Try to open mail client
-                window.location.href = `mailto:${EMAIL_RECIPIENT}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-                
-                setIsSubmitting(false);
-                onSubmitSuccess(!!attachedFile);
+                    if (response.ok) {
+                        setIsSubmitting(false);
+                        onSubmitSuccess(!!attachedFile);
+                    } else {
+                        const errorData = await response.json();
+                        alert("Es gab einen Fehler beim Senden: " + (errorData.error || "Bitte versuche es erneut."));
+                        setIsSubmitting(false);
+                    }
+                } catch (error) {
+                    alert("Es gab einen Netzwerkfehler. Bitte überprüfe deine Internetverbindung.");
+                    setIsSubmitting(false);
+                }
             };
 
             return (
@@ -478,6 +483,7 @@ Bitte meldet euch bei mir!
                                         placeholder="Beschreibe dein Objekt, füge Links zu STL-Dateien (z.B. Thingiverse) hinzu oder erkläre deine Idee..."
                                         value={formData.projectDescription}
                                         onChange={(e) => setFormData({...formData, projectDescription: e.target.value})}
+                                        name="description"
                                     />
                                 </div>
                                 
@@ -502,6 +508,7 @@ Bitte meldet euch bei mir!
                                                 className="hidden" 
                                                 accept=".stl,.obj,.3mf,.svg,.png,.jpg,.jpeg"
                                                 onChange={handleFileChange}
+                                                name="attachment"
                                             />
                                             <label 
                                                 htmlFor="file-upload"
@@ -686,6 +693,7 @@ Bitte meldet euch bei mir!
                                             placeholder="Welche Farbe oder welches Material brauchst du? (z.B. Neon Grün PLA, Carbon Fiber PETG...)"
                                             value={formData.customFilamentRequest}
                                             onChange={(e) => setFormData({...formData, customFilamentRequest: e.target.value})}
+                                            name="custom_material"
                                         />
                                         <div className="flex items-start gap-2 mt-2 text-amber-400 text-sm">
                                             <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
@@ -710,6 +718,7 @@ Bitte meldet euch bei mir!
                                             placeholder="Dein Name"
                                             value={formData.userName}
                                             onChange={(e) => setFormData({...formData, userName: e.target.value})}
+                                            name="name"
                                         />
                                     </div>
                                     <div>
@@ -721,6 +730,7 @@ Bitte meldet euch bei mir!
                                             placeholder="deine@email.com"
                                             value={formData.userEmail}
                                             onChange={(e) => setFormData({...formData, userEmail: e.target.value})}
+                                            name="email"
                                         />
                                     </div>
                                     <div className="md:col-span-2">
@@ -731,6 +741,7 @@ Bitte meldet euch bei mir!
                                             placeholder="+41 79 ..."
                                             value={formData.userPhone}
                                             onChange={(e) => setFormData({...formData, userPhone: e.target.value})}
+                                            name="phone"
                                         />
                                     </div>
                                 </div>
@@ -752,7 +763,7 @@ Bitte meldet euch bei mir!
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                             </svg>
-                                            Wird vorbereitet...
+                                            Wird gesendet...
                                         </span>
                                     ) : (
                                         <span className="flex items-center gap-2">
@@ -841,27 +852,11 @@ Bitte meldet euch bei mir!
                                     <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
                                         <CheckCircle2 className="h-10 w-10 text-green-400" />
                                     </div>
-                                    <h2 className="text-3xl font-bold text-white mb-4">E-Mail App geöffnet!</h2>
+                                    <h2 className="text-3xl font-bold text-white mb-4">Anfrage erfolgreich gesendet!</h2>
                                     
                                     <p className="text-slate-300 mb-6 leading-relaxed">
-                                        Wir haben dein E-Mail-Programm mit allen Details geöffnet. Bitte drücke dort nur noch auf <strong>"Senden"</strong>.
+                                        Vielen Dank! Wir haben deine Anfrage erhalten. Enrique und Jack werden sich schnellstmöglich per E-Mail bei dir melden.
                                     </p>
-
-                                    {lastOrderHadAttachment && (
-                                        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mb-8 text-left">
-                                            <div className="flex items-start gap-3">
-                                                <AlertCircle className="h-6 w-6 text-amber-500 flex-shrink-0 mt-0.5" />
-                                                <div>
-                                                    <h4 className="font-bold text-amber-400 mb-1">Achtung: Datei anhängen!</h4>
-                                                    <p className="text-sm text-amber-200/80">
-                                                        Aus Sicherheitsgründen kann der Browser deine Datei nicht automatisch anhängen. 
-                                                        <br/><br/>
-                                                        <strong>Bitte ziehe deine Datei jetzt manuell in die geöffnete E-Mail.</strong>
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
 
                                     <div className="flex flex-col gap-3">
                                         <Button onClick={() => setView(ViewState.HOME)} variant="outline">
