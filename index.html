@@ -124,6 +124,7 @@
           { id: '5', name: 'TPU Flexibel Rot', color: 'Rot', colorHex: '#dc2626', material: 'TPU', inStock: true },
           { id: '6', name: 'PLA Galaxy Silber', color: 'Silber', colorHex: '#9ca3af', material: 'PLA', inStock: true },
           { id: '7', name: 'PETG Transparen', color: 'Klar', colorHex: '#e5e7eb', material: 'PETG', inStock: false },
+          { id: '8', name: 'PLA Orange', color: 'Orange', colorHex: '#f97316', material: 'PLA', inStock: false, comingSoon: true },
         ];
 
         const EMAIL_RECIPIENT = "3d.druck.rorbas@gmail.com";
@@ -710,7 +711,11 @@
                                                     <div className="text-xs text-slate-500">{filament.color}</div>
                                                     {!filament.inStock && (
                                                         <div className="absolute inset-0 bg-slate-900/60 flex items-center justify-center rounded-lg backdrop-blur-[1px]">
-                                                            <span className="text-xs font-bold text-red-400 transform -rotate-12 border border-red-400 px-2 py-1 rounded">Ausverkauft</span>
+                                                            {filament.comingSoon ? (
+                                                                <span className="text-xs font-bold text-amber-400 transform -rotate-12 border border-amber-400 px-2 py-1 rounded whitespace-nowrap shadow-lg bg-slate-900/50">Bald verfügbar</span>
+                                                            ) : (
+                                                                <span className="text-xs font-bold text-red-400 transform -rotate-12 border border-red-400 px-2 py-1 rounded shadow-lg bg-slate-900/50">Ausverkauft</span>
+                                                            )}
                                                         </div>
                                                     )}
                                                 </button>
