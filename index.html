@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rorbas 3D Druck | Enrique & Jack</title>
+    <link rel="icon" type="image/svg+xml" href="https://lucide.dev/favicon.ico" />
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel (für JSX Support im Browser) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+            colors: {
+              brand: {
+                50: '#f0f9ff',
+                100: '#e0f2fe',
+                200: '#bae6fd',
+                300: '#7dd3fc',
+                400: '#38bdf8',
+                500: '#0ea5e9',
+                600: '#0284c7',
+                700: '#0369a1',
+                800: '#075985',
+                900: '#0c4a6e',
+              }
+            },
+            animation: {
+              fadeIn: 'fadeIn 0.5s ease-out',
+              slideUp: 'slideUp 0.5s ease-out',
+              scaleIn: 'scaleIn 0.3s ease-out',
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: '0' },
+                '100%': { opacity: '1' },
+              },
+              slideUp: {
+                '0%': { opacity: '0', transform: 'translateY(20px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              },
+              scaleIn: {
+                '0%': { opacity: '0', transform: 'scale(0.9)' },
+                '100%': { opacity: '1', transform: 'scale(1)' },
+              }
+            }
+          },
+        },
+      }
+    </script>
+    <style>
+      body {
+        background-color: #0f172a;
+        color: #f8fafc;
+      }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // --- ICONS (Lucide Replacements) ---
+        const Icon = ({ children, className, ...props }) => (
+            <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width="24" height="24" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                className={className} 
+                {...props}
+            >
+                {children}
+            </svg>
+        );
+
+        const Printer = (props) => <Icon {...props}><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect width="12" height="8" x="6" y="14"></rect></Icon>;
+        const Menu = (props) => <Icon {...props}><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></Icon>;
+        const X = (props) => <Icon {...props}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></Icon>;
+        const ArrowRight = (props) => <Icon {...props}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></Icon>;
+        const ArrowLeft = (props) => <Icon {...props}><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></Icon>;
+        const Box = (props) => <Icon {...props}><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" x2="12" y1="22.08" y2="12"/></Icon>;
+        const Zap = (props) => <Icon {...props}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></Icon>;
+        const Heart = (props) => <Icon {...props}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></Icon>;
+        const ClipboardList = (props) => <Icon {...props}><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></Icon>;
+        const Settings = (props) => <Icon {...props}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.72l-.15.1a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.72l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></Icon>;
+        const Truck = (props) => <Icon {...props}><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></Icon>;
+        const Send = (props) => <Icon {...props}><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></Icon>;
+        const AlertCircle = (props) => <Icon {...props}><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></Icon>;
+        const CheckCircle2 = (props) => <Icon {...props}><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></Icon>;
+        const Sparkles = (props) => <Icon {...props}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 3v4"/><path d="M3 5h4"/><path d="M3 9h4"/></Icon>;
+        const Info = (props) => <Icon {...props}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></Icon>;
+        const Mail = (props) => <Icon {...props}><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></Icon>;
+        const MapPin = (props) => <Icon {...props}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></Icon>;
+
+        // --- CONSTANTS ---
+        const STOCK_FILAMENTS = [
+          { id: '1', name: 'PLA Matt Schwarz', color: 'Schwarz', colorHex: '#1a1a1a', material: 'PLA', inStock: true },
+          { id: '2', name: 'PLA Weiß', color: 'Weiß', colorHex: '#f5f5f5', material: 'PLA', inStock: true },
+          { id: '3', name: 'PETG Signalblau', color: 'Blau', colorHex: '#2563eb', material: 'PETG', inStock: true },
+          { id: '4', name: 'PLA Seidengold', color: 'Gold', colorHex: '#d4af37', material: 'PLA', inStock: true },
+          { id: '5', name: 'TPU Flexibel Rot', color: 'Rot', colorHex: '#dc2626', material: 'TPU', inStock: true },
+          { id: '6', name: 'PLA Galaxy Silber', color: 'Silber', colorHex: '#9ca3af', material: 'PLA', inStock: true },
+          { id: '7', name: 'PETG Transparen', color: 'Klar', colorHex: '#e5e7eb', material: 'PETG', inStock: false },
+        ];
+
+        const EMAIL_RECIPIENT = "3d.druck.rorbas@gmail.com";
+        const CUSTOM_FILAMENT_SURCHARGE = 3.00;
+        
+        const ViewState = {
+            HOME: 'HOME',
+            ORDER: 'ORDER',
+            SUCCESS: 'SUCCESS'
+        };
+
+        // --- COMPONENTS ---
+
+        // Button Component
+        const Button = ({ 
+            variant = 'primary', 
+            size = 'md', 
+            className = '', 
+            children, 
+            ...props 
+        }) => {
+            const baseStyles = "inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-50 disabled:cursor-not-allowed";
+            
+            const variants = {
+                primary: "bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-500/20 focus:ring-brand-500",
+                secondary: "bg-slate-700 hover:bg-slate-600 text-white focus:ring-slate-500",
+                outline: "border-2 border-slate-600 hover:border-brand-500 text-slate-300 hover:text-white bg-transparent",
+                ghost: "text-slate-400 hover:text-white hover:bg-slate-800",
+            };
+
+            const sizes = {
+                sm: "px-3 py-1.5 text-sm",
+                md: "px-5 py-2.5 text-base",
+                lg: "px-8 py-4 text-lg",
+            };
+
+            return (
+                <button 
+                    className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
+                    {...props}
+                >
+                    {children}
+                </button>
+            );
+        };
+
+        // Navbar Component
+        const Navbar = ({ currentView, onNavigate }) => {
+            const [isOpen, setIsOpen] = React.useState(false);
+
+            return (
+                <nav className="fixed w-full z-50 bg-slate-900/80 backdrop-blur-md border-b border-slate-800">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex items-center justify-between h-16">
+                            <div 
+                                className="flex items-center gap-2 cursor-pointer group"
+                                onClick={() => onNavigate(ViewState.HOME)}
+                            >
+                                <div className="p-2 bg-brand-500/10 rounded-lg group-hover:bg-brand-500/20 transition-colors">
+                                    <Printer className="h-6 w-6 text-brand-400" />
+                                </div>
+                                <span className="font-bold text-xl tracking-tight text-white">
+                                    Rorbas<span className="text-brand-400">3D</span>
+                                </span>
+                            </div>
+                            
+                            <div className="hidden md:block">
+                                <div className="ml-10 flex items-baseline space-x-8">
+                                    <button 
+                                        onClick={() => onNavigate(ViewState.HOME)}
+                                        className={`${currentView === ViewState.HOME ? 'text-white' : 'text-slate-400'} hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors`}
+                                    >
+                                        Home
+                                    </button>
+                                    <button 
+                                        onClick={() => onNavigate(ViewState.ORDER)}
+                                        className="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-lg shadow-brand-500/20"
+                                    >
+                                        Jetzt Drucken
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="-mr-2 flex md:hidden">
+                                <button
+                                    onClick={() => setIsOpen(!isOpen)}
+                                    className="inline-flex items-center justify-center p-2 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 focus:outline-none"
+                                >
+                                    {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Mobile menu */}
+                    {isOpen && (
+                        <div className="md:hidden bg-slate-900 border-b border-slate-800">
+                            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                                <button
+                                    onClick={() => { onNavigate(ViewState.HOME); setIsOpen(false); }}
+                                    className="text-slate-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium w-full text-left"
+                                >
+                                    Home
+                                </button>
+                                <button
+                                    onClick={() => { onNavigate(ViewState.ORDER); setIsOpen(false); }}
+                                    className="bg-brand-600 text-white block px-3 py-2 rounded-md text-base font-medium w-full text-left"
+                                >
+                                    Jetzt starten
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </nav>
+            );
+        };
+
+        // Hero Component
+        const Hero = ({ onStart }) => {
+            return (
+                <div className="relative pt-24 pb-16 lg:pt-32 lg:pb-24 overflow-hidden">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                        <div className="text-center max-w-3xl mx-auto">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-300 text-sm font-medium mb-6">
+                                <span className="relative flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-500"></span>
+                                </span>
+                                Jetzt Anfragen offen
+                            </div>
+                            
+                            <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white mb-6">
+                                Deine Ideen. <br />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-indigo-500">
+                                    Dreidimensional realisiert.
+                                </span>
+                            </h1>
+                            
+                            <p className="text-lg md:text-xl text-slate-400 mb-8 leading-relaxed">
+                                Willkommen bei Rorbas 3D Druck. Wir sind Enrique und Jack – deine lokalen Experten für personalisierte 3D-Drucke. Von Prototypen bis zu einzigartigen Geschenken, wir machen es möglich.
+                            </p>
+
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                                <Button onClick={onStart} size="lg" className="w-full sm:w-auto gap-2">
+                                    Projekt Starten <ArrowRight className="h-5 w-5" />
+                                </Button>
+                                <Button variant="outline" size="lg" className="w-full sm:w-auto" onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth'})}>
+                                    Wie es funktioniert
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8">
+                            {[
+                                {
+                                    icon: <Box className="h-8 w-8 text-brand-400" />,
+                                    title: "Individuell",
+                                    desc: "Jedes Teil wird genau nach deinen Wünschen und Maßen gefertigt."
+                                },
+                                {
+                                    icon: <Zap className="h-8 w-8 text-brand-400" />,
+                                    title: "Schnell & Lokal",
+                                    desc: "Direkt aus Rorbas. Keine langen Lieferwege, direkter Kontakt."
+                                },
+                                {
+                                    icon: <Heart className="h-8 w-8 text-brand-400" />,
+                                    title: "Leidenschaft",
+                                    desc: "Gedruckt von Enthusiasten (Enrique & Jack), die Qualität lieben."
+                                }
+                            ].map((feature, idx) => (
+                                <div key={idx} className="p-6 rounded-2xl bg-slate-800/50 border border-slate-700 hover:border-brand-500/30 transition-all hover:-translate-y-1">
+                                    <div className="p-3 bg-slate-900 rounded-lg inline-block mb-4">
+                                        {feature.icon}
+                                    </div>
+                                    <h3 className="text-xl font-semibold text-white mb-2">{feature.title}</h3>
+                                    <p className="text-slate-400">{feature.desc}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Background decoration */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 pointer-events-none">
+                        <div className="absolute top-0 left-1/4 w-96 h-96 bg-brand-600/20 rounded-full blur-[100px]"></div>
+                        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-600/20 rounded-full blur-[100px]"></div>
+                    </div>
+                </div>
+            );
+        };
+
+        // HowItWorks Component
+        const HowItWorks = () => {
+            return (
+                <section id="how-it-works" className="py-20 bg-slate-900">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="text-center mb-16">
+                            <h2 className="text-3xl font-bold text-white mb-4">So funktioniert's</h2>
+                            <p className="text-slate-400 max-w-2xl mx-auto">
+                                In drei einfachen Schritten zu deinem fertigen Objekt.
+                            </p>
+                        </div>
+
+                        <div className="relative">
+                            {/* Connecting Line */}
+                            <div className="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-slate-800 -translate-y-1/2 z-0"></div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative z-10">
+                                {[
+                                    {
+                                        icon: <ClipboardList className="h-10 w-10" />,
+                                        title: "1. Anfrage senden",
+                                        desc: "Fülle unser Formular aus. Beschreibe deine Idee oder lade eine Datei hoch."
+                                    },
+                                    {
+                                        icon: <Settings className="h-10 w-10" />,
+                                        title: "2. Wir drucken",
+                                        desc: "Enrique und Jack prüfen die Machbarkeit und starten die Drucker."
+                                    },
+                                    {
+                                        icon: <Truck className="h-10 w-10" />,
+                                        title: "3. Abholen / Versand",
+                                        desc: "Sobald es fertig ist, informieren wir dich per E-Mail."
+                                    }
+                                ].map((step, idx) => (
+                                    <div key={idx} className="flex flex-col items-center text-center">
+                                        <div className="w-20 h-20 rounded-full bg-slate-800 border-4 border-slate-900 flex items-center justify-center mb-6 shadow-xl relative group">
+                                            <div className="text-brand-400 group-hover:scale-110 transition-transform duration-300">
+                                                {step.icon}
+                                            </div>
+                                            <div className="absolute -bottom-3 bg-brand-600 text-white text-xs font-bold px-2 py-1 rounded-full">
+                                                Schritt {idx + 1}
+                                            </div>
+                                        </div>
+                                        <h3 className="text-xl font-semibold text-white mb-2">{step.title}</h3>
+                                        <p className="text-slate-400 text-sm leading-relaxed max-w-xs">{step.desc}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        // OrderForm Component
+        const OrderForm = ({ onCancel, onSubmitSuccess }) => {
+            const [formData, setFormData] = React.useState({
+                projectDescription: '',
+                filamentMode: 'stock',
+                selectedFilamentId: null,
+                customFilamentRequest: '',
+                userName: '',
+                userEmail: '',
+                userPhone: ''
+            });
+
+            const [isSubmitting, setIsSubmitting] = React.useState(false);
+            const [showMaterialInfo, setShowMaterialInfo] = React.useState(false);
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setIsSubmitting(true);
+
+                // Prepare email body
+                const selectedStock = STOCK_FILAMENTS.find(f => f.id === formData.selectedFilamentId);
+                
+                const filamentText = formData.filamentMode === 'stock' && selectedStock
+                    ? `Lager-Filament: ${selectedStock.name} (${selectedStock.material})`
+                    : `Spezialwunsch (+${CUSTOM_FILAMENT_SURCHARGE} CHF): ${formData.customFilamentRequest}`;
+
+                const subject = `Neue 3D-Druck Anfrage von ${formData.userName}`;
+                const body = `
+Hallo Enrique und Jack,
+
+Ich habe eine neue Anfrage für einen 3D-Druck:
+
+--- PROJEKT ---
+${formData.projectDescription}
+
+--- MATERIAL ---
+${filamentText}
+
+--- KONTAKT ---
+Name: ${formData.userName}
+Email: ${formData.userEmail}
+Telefon: ${formData.userPhone || 'Nicht angegeben'}
+
+Bitte meldet euch bei mir!
+                `.trim();
+
+                // Simulate network request nicely
+                await new Promise(resolve => setTimeout(resolve, 1500));
+
+                // Try to open mail client
+                window.location.href = `mailto:${EMAIL_RECIPIENT}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                
+                setIsSubmitting(false);
+                onSubmitSuccess();
+            };
+
+            return (
+                <div className="w-full max-w-4xl mx-auto py-12 px-4 sm:px-6">
+                    <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700 shadow-2xl overflow-hidden">
+                        <div className="p-6 md:p-8 border-b border-slate-700 bg-slate-800/80">
+                            <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                                <Sparkles className="text-brand-400" />
+                                Projekt Anfrage
+                            </h2>
+                            <p className="text-slate-400 mt-2">
+                                Beschreibe uns dein Projekt. Enrique oder Jack melden sich so schnell wie möglich bei dir.
+                            </p>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-8">
+                            
+                            {/* SECTION 1: Description */}
+                            <div className="space-y-4">
+                                <label className="block text-sm font-medium text-slate-300 uppercase tracking-wider">
+                                    1. Was möchtest du drucken?
+                                </label>
+                                <div className="relative">
+                                    <textarea
+                                        required
+                                        rows="5"
+                                        className="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 text-white placeholder-slate-500 focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+                                        placeholder="Beschreibe dein Objekt, füge Links zu STL-Dateien (z.B. Thingiverse) hinzu oder erkläre deine Idee..."
+                                        value={formData.projectDescription}
+                                        onChange={(e) => setFormData({...formData, projectDescription: e.target.value})}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* SECTION 2: Material Selection */}
+                            <div className="space-y-4">
+                                <label className="block text-sm font-medium text-slate-300 uppercase tracking-wider">
+                                    2. Material & Farbe auswählen
+                                </label>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div 
+                                        onClick={() => setFormData({...formData, filamentMode: 'stock', customFilamentRequest: ''})}
+                                        className={`cursor-pointer p-4 rounded-xl border-2 transition-all ${formData.filamentMode === 'stock' ? 'border-brand-500 bg-brand-500/10' : 'border-slate-700 bg-slate-800 hover:border-slate-600'}`}
+                                    >
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${formData.filamentMode === 'stock' ? 'border-brand-500' : 'border-slate-500'}`}>
+                                                {formData.filamentMode === 'stock' && <div className="w-2.5 h-2.5 bg-brand-500 rounded-full" />}
+                                            </div>
+                                            <span className="font-semibold text-white">Lagerbestand</span>
+                                        </div>
+                                        <p className="text-sm text-slate-400 ml-8">Wähle aus unseren vorhandenen Filamenten. Keine Zusatzkosten.</p>
+                                    </div>
+
+                                    <div 
+                                        onClick={() => setFormData({...formData, filamentMode: 'custom', selectedFilamentId: null})}
+                                        className={`cursor-pointer p-4 rounded-xl border-2 transition-all ${formData.filamentMode === 'custom' ? 'border-brand-500 bg-brand-500/10' : 'border-slate-700 bg-slate-800 hover:border-slate-600'}`}
+                                    >
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${formData.filamentMode === 'custom' ? 'border-brand-500' : 'border-slate-500'}`}>
+                                                {formData.filamentMode === 'custom' && <div className="w-2.5 h-2.5 bg-brand-500 rounded-full" />}
+                                            </div>
+                                            <span className="font-semibold text-white">Spezialwunsch</span>
+                                            <span className="text-xs bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded ml-auto">
+                                                +{CUSTOM_FILAMENT_SURCHARGE} CHF
+                                            </span>
+                                        </div>
+                                        <p className="text-sm text-slate-400 ml-8">Wir bestellen eine Farbe/Material extra für dich.</p>
+                                    </div>
+                                </div>
+
+                                {/* Sub-selection for Stock */}
+                                {formData.filamentMode === 'stock' && (
+                                    <div className="animate-fadeIn mt-6">
+                                        
+                                        {/* Info Button Section */}
+                                        <div className="mb-4">
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowMaterialInfo(!showMaterialInfo)}
+                                                className="text-brand-400 hover:text-brand-300 text-sm font-medium flex items-center gap-2 transition-colors focus:outline-none"
+                                            >
+                                                <Info className="h-4 w-4" />
+                                                {showMaterialInfo ? 'Infos ausblenden' : 'Welches Material passt zu mir? (Infos)'}
+                                            </button>
+
+                                            {showMaterialInfo && (
+                                                <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-900/50 rounded-xl border border-slate-700 animate-fadeIn relative">
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => setShowMaterialInfo(false)}
+                                                        className="absolute top-2 right-2 text-slate-500 hover:text-white"
+                                                    >
+                                                        <X className="h-4 w-4" />
+                                                    </button>
+                                                    
+                                                    <div className="p-3 bg-slate-800 rounded-lg border border-slate-700">
+                                                        <h4 className="font-bold text-white mb-1">PLA</h4>
+                                                        <p className="text-xs text-brand-400 font-mono mb-2">Der Standard</p>
+                                                        <ul className="text-xs text-slate-300 space-y-1 list-disc list-inside">
+                                                            <li>Perfekt für Deko & Figuren</li>
+                                                            <li>Einfach zu drucken</li>
+                                                            <li>Biologisch abbaubar</li>
+                                                            <li className="text-slate-500">Nicht hitzebeständig (&lt;50°C)</li>
+                                                        </ul>
+                                                    </div>
+
+                                                    <div className="p-3 bg-slate-800 rounded-lg border border-slate-700">
+                                                        <h4 className="font-bold text-white mb-1">PETG</h4>
+                                                        <p className="text-xs text-brand-400 font-mono mb-2">Der Allrounder</p>
+                                                        <ul className="text-xs text-slate-300 space-y-1 list-disc list-inside">
+                                                            <li>Robust & stabil</li>
+                                                            <li>Witterungsbeständig</li>
+                                                            <li>Leicht flexibel</li>
+                                                            <li>Gut für mechanische Teile</li>
+                                                        </ul>
+                                                    </div>
+
+                                                    <div className="p-3 bg-slate-800 rounded-lg border border-slate-700">
+                                                        <h4 className="font-bold text-white mb-1">TPU</h4>
+                                                        <p className="text-xs text-brand-400 font-mono mb-2">Flexibel</p>
+                                                        <ul className="text-xs text-slate-300 space-y-1 list-disc list-inside">
+                                                            <li>Gummiartig & weich</li>
+                                                            <li>Unzerbrechlich</li>
+                                                            <li>Stoßdämpfend</li>
+                                                            <li>Für Handyhüllen, Dichtungen</li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+                                            Verfügbare Filamente
+                                        </label>
+
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                            {STOCK_FILAMENTS.map(filament => (
+                                                <button
+                                                    type="button"
+                                                    key={filament.id}
+                                                    disabled={!filament.inStock}
+                                                    onClick={() => setFormData({...formData, selectedFilamentId: filament.id})}
+                                                    className={`relative p-3 rounded-lg border text-left transition-all group ${
+                                                        formData.selectedFilamentId === filament.id 
+                                                            ? 'border-brand-500 ring-1 ring-brand-500 bg-slate-800' 
+                                                            : 'border-slate-700 bg-slate-900 hover:border-slate-500'
+                                                    } ${!filament.inStock ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                >
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <div 
+                                                            className="w-6 h-6 rounded-full border border-slate-600 shadow-sm" 
+                                                            style={{backgroundColor: filament.colorHex}} 
+                                                        />
+                                                        {filament.material === 'TPU' && <span className="text-[10px] font-bold bg-slate-700 px-1 rounded text-slate-300">FLEX</span>}
+                                                    </div>
+                                                    <div className="text-sm font-medium text-white truncate">{filament.name}</div>
+                                                    <div className="text-xs text-slate-500">{filament.color}</div>
+                                                    {!filament.inStock && (
+                                                        <div className="absolute inset-0 bg-slate-900/60 flex items-center justify-center rounded-lg backdrop-blur-[1px]">
+                                                            <span className="text-xs font-bold text-red-400 transform -rotate-12 border border-red-400 px-2 py-1 rounded">Ausverkauft</span>
+                                                        </div>
+                                                    )}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Sub-selection for Custom */}
+                                {formData.filamentMode === 'custom' && (
+                                    <div className="mt-4 animate-fadeIn">
+                                        <textarea
+                                            required
+                                            rows="2"
+                                            className="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 text-white placeholder-slate-500 focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                                            placeholder="Welche Farbe oder welches Material brauchst du? (z.B. Neon Grün PLA, Carbon Fiber PETG...)"
+                                            value={formData.customFilamentRequest}
+                                            onChange={(e) => setFormData({...formData, customFilamentRequest: e.target.value})}
+                                        />
+                                        <div className="flex items-start gap-2 mt-2 text-amber-400 text-sm">
+                                            <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                                            <p>Bei Spezialbestellungen fällt eine einmalige Gebühr von {CUSTOM_FILAMENT_SURCHARGE} CHF an. Die Lieferzeit kann sich um 1-2 Wochen verlängern.</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* SECTION 3: Contact Info */}
+                            <div className="space-y-4">
+                                <label className="block text-sm font-medium text-slate-300 uppercase tracking-wider">
+                                    3. Deine Kontaktdaten
+                                </label>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs text-slate-500 mb-1">Name</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                                            placeholder="Dein Name"
+                                            value={formData.userName}
+                                            onChange={(e) => setFormData({...formData, userName: e.target.value})}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs text-slate-500 mb-1">E-Mail</label>
+                                        <input
+                                            type="email"
+                                            required
+                                            className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                                            placeholder="deine@email.com"
+                                            value={formData.userEmail}
+                                            onChange={(e) => setFormData({...formData, userEmail: e.target.value})}
+                                        />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="block text-xs text-slate-500 mb-1">Telefon (Optional)</label>
+                                        <input
+                                            type="tel"
+                                            className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                                            placeholder="+41 79 ..."
+                                            value={formData.userPhone}
+                                            onChange={(e) => setFormData({...formData, userPhone: e.target.value})}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="pt-6 border-t border-slate-700 flex flex-col sm:flex-row items-center gap-4 justify-end">
+                                <Button type="button" variant="ghost" onClick={onCancel} className="w-full sm:w-auto">
+                                    Abbrechen
+                                </Button>
+                                <Button 
+                                    type="submit" 
+                                    disabled={isSubmitting || (formData.filamentMode === 'stock' && !formData.selectedFilamentId)}
+                                    className="w-full sm:w-auto min-w-[200px]"
+                                >
+                                    {isSubmitting ? (
+                                        <span className="flex items-center gap-2">
+                                            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            Wird vorbereitet...
+                                        </span>
+                                    ) : (
+                                        <span className="flex items-center gap-2">
+                                            Anfrage Absenden <Send className="h-4 w-4" />
+                                        </span>
+                                    )}
+                                </Button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            );
+        };
+
+        // Footer Component
+        const Footer = () => {
+            return (
+                <footer className="bg-slate-950 py-12 border-t border-slate-800 text-slate-400">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <h3 className="text-white font-bold text-lg mb-4">Rorbas 3D Druck</h3>
+                                <p className="mb-4 text-sm max-w-xs">
+                                    Dein lokaler Partner für Rapid Prototyping und individuelle Geschenke. 
+                                    Gegründet von Enrique & Jack.
+                                </p>
+                            </div>
+                            <div className="flex flex-col md:items-end">
+                                <h3 className="text-white font-bold text-lg mb-4">Kontakt</h3>
+                                <a href={`mailto:${EMAIL_RECIPIENT}`} className="flex items-center gap-2 hover:text-brand-400 transition-colors mb-2">
+                                    <Mail className="h-4 w-4" /> {EMAIL_RECIPIENT}
+                                </a>
+                                <div className="flex items-center gap-2">
+                                    <MapPin className="h-4 w-4" /> Rorbas, Schweiz
+                                </div>
+                            </div>
+                        </div>
+                        <div className="mt-12 pt-8 border-t border-slate-900 text-center text-xs text-slate-600">
+                            &copy; {new Date().getFullYear()} Rorbas 3D Druck. Alle Rechte vorbehalten.
+                        </div>
+                    </div>
+                </footer>
+            );
+        };
+
+        // Main App Component
+        const App = () => {
+            const [view, setView] = React.useState(ViewState.HOME);
+
+            const handleStartOrder = () => {
+                setView(ViewState.ORDER);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+
+            const handleOrderSuccess = () => {
+                setView(ViewState.SUCCESS);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+
+            return (
+                <div className="min-h-screen bg-slate-950 flex flex-col font-sans">
+                    <Navbar currentView={view} onNavigate={setView} />
+                    
+                    <main className="flex-grow pt-16">
+                        {view === ViewState.HOME && (
+                            <div className="animate-fadeIn">
+                                <Hero onStart={handleStartOrder} />
+                                <HowItWorks />
+                            </div>
+                        )}
+
+                        {view === ViewState.ORDER && (
+                            <div className="animate-slideUp">
+                                <OrderForm 
+                                    onCancel={() => setView(ViewState.HOME)} 
+                                    onSubmitSuccess={handleOrderSuccess}
+                                />
+                            </div>
+                        )}
+
+                        {view === ViewState.SUCCESS && (
+                            <div className="min-h-[60vh] flex items-center justify-center px-4 animate-scaleIn">
+                                <div className="text-center max-w-lg mx-auto p-8 rounded-2xl bg-slate-800/50 border border-brand-500/30">
+                                    <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                                        <CheckCircle2 className="h-10 w-10 text-green-400" />
+                                    </div>
+                                    <h2 className="text-3xl font-bold text-white mb-4">E-Mail App geöffnet!</h2>
+                                    <p className="text-slate-300 mb-8 leading-relaxed">
+                                        Wir haben dein E-Mail-Programm mit allen Details geöffnet. Bitte drücke dort nur noch auf <strong>"Senden"</strong>, damit die Anfrage bei Enrique und Jack ankommt.
+                                    </p>
+                                    <div className="flex flex-col gap-3">
+                                        <Button onClick={() => setView(ViewState.HOME)} variant="outline">
+                                            <ArrowLeft className="h-4 w-4 mr-2" /> Zurück zur Startseite
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </main>
+
+                    <Footer />
+                </div>
+            );
+        };
+
+        // Render Application
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
