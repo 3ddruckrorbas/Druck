@@ -126,7 +126,7 @@
         // Stattdessen nutzen wir nun eine generierte "Device ID", die im Browser des Nutzers gespeichert wird.
         // Diese ID wird mit der Anfrage gesendet. Wenn jemand nervt, kopiere seine "Device-ID" aus der Email hier rein.
         const BLACKLISTED_IDS = [
-             "", 
+             "example-id-123456", 
              // Fügt hier Device IDs hinzu, die gesperrt werden sollen
         ];
 
@@ -142,7 +142,7 @@
           { id: '8', name: 'TPU A95 Hellgrün', color: 'Hellgrün', colorHex: '#00B08B', material: 'TPU', inStock: true, priceSmall: 3.50, priceLarge: 8.00 },
           { id: '9', name: 'PETG Signalblau', color: 'Blau', colorHex: '#2563eb', material: 'PETG', inStock: true, priceSmall: 2.50, priceLarge: 6.00 },
           { id: '10', name: 'PETG Transparent', color: 'Klar', colorHex: '#E5E7EB', material: 'PETG', inStock: false, priceSmall: 2.50, priceLarge: 6.00 },
-          { id: '11', name: 'PLA Orange', color: 'Orange', colorHex: '#f97316', material: 'PLA', inStock: false, comingSoon: true, priceSmall: 2.50, priceLarge: 6.00 },
+          //{ id: '11', name: 'PLA Orange', color: 'Orange', colorHex: '#f97316', material: 'PLA', inStock: false, comingSoon: true, priceSmall: 2.50, priceLarge: 6.00 },
         ];
 
         const EMAIL_RECIPIENT = "3d.druck.rorbas@gmail.com";
@@ -153,7 +153,8 @@
             HOME: 'HOME',
             ORDER: 'ORDER',
             SUCCESS: 'SUCCESS',
-            BANNED: 'BANNED'
+            BANNED: 'BANNED',
+            AGB: 'AGB'
         };
 
         // --- HELPERS ---
@@ -210,6 +211,72 @@
                 </button>
             );
         };
+
+        // AGB View Component
+        const AGBView = ({ onBack }) => (
+            <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 animate-fadeIn">
+                <div className="mb-6">
+                     <Button onClick={onBack} variant="ghost" size="sm" className="gap-2 pl-0 hover:bg-transparent hover:text-brand-400">
+                        <ArrowLeft className="h-4 w-4" /> Zurück
+                    </Button>
+                </div>
+                <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700 p-8 shadow-2xl">
+                    <h1 className="text-3xl font-bold text-white mb-8">Allgemeine Geschäftsbedingungen (AGB)</h1>
+                    
+                    <div className="space-y-6 text-slate-300">
+                        <section>
+                            <h2 className="text-xl font-semibold text-white mb-2">§1 Geltungsbereich</h2>
+                            <p>Diese Allgemeinen Geschäftsbedingungen gelten für die Nutzung der Webseite https://3ddruckrorbas.github.io/Druck/ durch private Nutzer.</p>
+                        </section>
+
+                        <section>
+                            <h2 className="text-xl font-semibold text-white mb-2">§2 Art des Angebots</h2>
+                            <p>Die Webseite dient der Bereitstellung von Informationen sowie der Kontaktaufnahme im Zusammenhang mit privaten, nicht gewerblichen Leistungen im Bereich 3D-Druck.</p>
+                        </section>
+
+                        <section>
+                            <h2 className="text-xl font-semibold text-white mb-2">§3 Nutzung der Webseite</h2>
+                            <p>Die Nutzung der Webseite ist ausschließlich zu rechtmäßigen Zwecken gestattet. Missbräuchliche Nutzung ist untersagt.</p>
+                        </section>
+
+                        <section>
+                            <h2 className="text-xl font-semibold text-white mb-2">§4 Technische Sicherheitsmaßnahmen</h2>
+                            <p>Zur Sicherstellung des ordnungsgemäßen Betriebs der Webseite sowie zur Abwehr von Spam und Missbrauch werden technische Sicherheitsmaßnahmen eingesetzt.</p>
+                        </section>
+
+                        <section>
+                            <h2 className="text-xl font-semibold text-white mb-2">§5 Verarbeitung technischer Identifikationsmerkmale</h2>
+                            <p>Im Rahmen der Sicherheits- und Spamprävention kann die MAC-Adresse des zugreifenden Geräts verarbeitet werden. Die Verarbeitung erfolgt ausschließlich zu Sicherheits- und Spamabwehrzwecken und wird nicht an Dritte weitergegeben.</p>
+                        </section>
+
+                        <section>
+                            <h2 className="text-xl font-semibold text-white mb-2">§6 Haftung</h2>
+                            <p>Eine Haftung für Schäden ist ausgeschlossen, sofern kein vorsätzliches oder grob fahrlässiges Verhalten vorliegt.</p>
+                        </section>
+
+                        <section>
+                            <h2 className="text-xl font-semibold text-white mb-2">§7 Verfügbarkeit</h2>
+                            <p>Es wird keine Garantie für eine dauerhafte Verfügbarkeit der Webseite übernommen.</p>
+                        </section>
+
+                        <section>
+                            <h2 className="text-xl font-semibold text-white mb-2">§8 Änderungen der AGB</h2>
+                            <p>Der Betreiber behält sich vor, diese AGB jederzeit zu ändern.</p>
+                        </section>
+
+                        <section>
+                            <h2 className="text-xl font-semibold text-white mb-2">§9 Anwendbares Recht</h2>
+                            <p>Es gilt das Recht der Bundesrepublik Deutschland.</p>
+                        </section>
+
+                        <section>
+                            <h2 className="text-xl font-semibold text-white mb-2">§10 Salvatorische Klausel</h2>
+                            <p>Sollten einzelne Bestimmungen unwirksam sein, bleibt die Wirksamkeit der übrigen Bestimmungen unberührt.</p>
+                        </section>
+                    </div>
+                </div>
+            </div>
+        );
 
         // Banned Screen Component
         const BannedScreen = () => (
@@ -295,6 +362,12 @@
                                     className="bg-brand-600 text-white block px-3 py-2 rounded-md text-base font-medium w-full text-left"
                                 >
                                     Jetzt starten
+                                </button>
+                                <button
+                                    onClick={() => { onNavigate(ViewState.AGB); setIsOpen(false); }}
+                                    className="text-slate-400 hover:text-white block px-3 py-2 rounded-md text-sm w-full text-left border-t border-slate-800 mt-2"
+                                >
+                                    AGB
                                 </button>
                             </div>
                         </div>
@@ -941,7 +1014,7 @@
         };
 
         // Footer Component
-        const Footer = () => {
+        const Footer = ({ onNavigate }) => {
             return (
                 <footer className="bg-slate-950 py-12 border-t border-slate-800 text-slate-400">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -963,8 +1036,14 @@
                                 </div>
                             </div>
                         </div>
-                        <div className="mt-12 pt-8 border-t border-slate-900 text-center text-xs text-slate-600">
-                            &copy; {new Date().getFullYear()} Rorbas 3D Druck. Alle Rechte vorbehalten.
+                        <div className="mt-12 pt-8 border-t border-slate-900 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-600">
+                            <div>&copy; {new Date().getFullYear()} Rorbas 3D Druck. Alle Rechte vorbehalten.</div>
+                            <button 
+                                onClick={() => onNavigate(ViewState.AGB)}
+                                className="hover:text-brand-400 transition-colors underline decoration-slate-800 underline-offset-4 hover:decoration-brand-400"
+                            >
+                                AGB & Rechtliches
+                            </button>
                         </div>
                     </div>
                 </footer>
@@ -1045,9 +1124,13 @@
                                 </div>
                             </div>
                         )}
+
+                        {view === ViewState.AGB && (
+                            <AGBView onBack={() => setView(ViewState.HOME)} />
+                        )}
                     </main>
 
-                    <Footer />
+                    <Footer onNavigate={setView} />
                 </div>
             );
         };
