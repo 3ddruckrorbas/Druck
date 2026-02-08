@@ -115,21 +115,33 @@
         const Paperclip = (props) => <Icon {...props}><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></Icon>;
         const ChevronDown = (props) => <Icon {...props}><path d="m6 9 6 6 6-6"/></Icon>;
         const HelpCircle = (props) => <Icon {...props}><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></Icon>;
+        const Tag = (props) => <Icon {...props}><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/></Icon>;
+        const ShieldBan = (props) => <Icon {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m4.6 16.4 14.8-8.4"/></Icon>;
 
 
         // --- CONSTANTS ---
+        
+        // HIER KÖNNT IHR IP-ADRESSEN SPERREN
+        // Beispiel: "192.168.1.1" (als Strings in Anführungszeichen, getrennt durch Komma)
+        // MAC-Adressen können im Browser technisch nicht ausgelesen werden (Sicherheitsstandard aller Browser).
+        const BLACKLISTED_IPS = [
+             "1.2.3.4", // Beispiel IP
+             // Fügt hier weitere IPs hinzu, z.B.: "85.2.10.122"
+        ];
+
+        // Preisstruktur: priceSmall (< 50g), priceLarge (pro 100g)
         const STOCK_FILAMENTS = [
-          { id: '1', name: 'PLA Matt Schwarz', color: 'Schwarz', colorHex: '#1a1a1a', material: 'PLA', inStock: true },
-          { id: '2', name: 'PLA Weiß', color: 'Weiß', colorHex: '#f5f5f5', material: 'PLA', inStock: true },
-          { id: '3', name: 'PLA Seidengold', color: 'Gold', colorHex: '#d4af37', material: 'PLA', inStock: true },
-          { id: '4', name: 'PLA Galaxy Silber', color: 'Silber', colorHex: '#9ca3af', material: 'PLA', inStock: true },
-          { id: '5', name: 'PLA Teak Wood', color: 'Teak Wood', colorHex: '#8B4513', material: 'PLA', inStock: true },
-          { id: '6', name: 'PLA Black Walnut Wood', color: 'Black Walnut Wood', colorHex: '#C49A6C', material: 'PLA', inStock: true },
-          { id: '7', name: 'Rapid TPU A95 Rot', color: 'Rot', colorHex: '#dc2626', material: 'TPU', inStock: true },
-          { id: '8', name: 'TPU A95 Hellgrün', color: 'Hellgrün', colorHex: '#00B08B', material: 'TPU', inStock: true },
-          { id: '9', name: 'PETG Signalblau', color: 'Blau', colorHex: '#2563eb', material: 'PETG', inStock: true },
-          { id: '10', name: 'PETG Transparent', color: 'Klar', colorHex: '#E5E7EB', material: 'PETG', inStock: false },
-          { id: '11', name: 'PLA Orange', color: 'Orange', colorHex: '#f97316', material: 'PLA', inStock: false, comingSoon: true },
+          { id: '1', name: 'PLA Matt Schwarz', color: 'Schwarz', colorHex: '#1a1a1a', material: 'PLA', inStock: true, priceSmall: 2.50, priceLarge: 6.00 },
+          { id: '2', name: 'PLA Weiß', color: 'Weiß', colorHex: '#f5f5f5', material: 'PLA', inStock: true, priceSmall: 2.50, priceLarge: 6.00 },
+          { id: '3', name: 'PLA Seidengold', color: 'Gold', colorHex: '#d4af37', material: 'PLA', inStock: true, priceSmall: 2.50, priceLarge: 6.00 },
+          { id: '4', name: 'PLA Galaxy Silber', color: 'Silber', colorHex: '#9ca3af', material: 'PLA', inStock: true, priceSmall: 2.50, priceLarge: 6.00 },
+          { id: '5', name: 'PLA Teak Wood', color: 'Teak Wood', colorHex: '#8B4513', material: 'PLA', inStock: true, priceSmall: 3.00, priceLarge: 7.00 },
+          { id: '6', name: 'PLA Black Walnut Wood', color: 'Black Walnut Wood', colorHex: '#C49A6C', material: 'PLA', inStock: true, priceSmall: 3.00, priceLarge: 7.00 },
+          { id: '7', name: 'Rapid TPU A95 Rot', color: 'Rot', colorHex: '#dc2626', material: 'TPU', inStock: true, priceSmall: 3.50, priceLarge: 8.00 },
+          { id: '8', name: 'TPU A95 Hellgrün', color: 'Hellgrün', colorHex: '#00B08B', material: 'TPU', inStock: true, priceSmall: 3.50, priceLarge: 8.00 },
+          { id: '9', name: 'PETG Signalblau', color: 'Blau', colorHex: '#2563eb', material: 'PETG', inStock: true, priceSmall: 2.50, priceLarge: 6.00 },
+          { id: '10', name: 'PETG Transparent', color: 'Klar', colorHex: '#E5E7EB', material: 'PETG', inStock: false, priceSmall: 2.50, priceLarge: 6.00 },
+          { id: '11', name: 'PLA Orange', color: 'Orange', colorHex: '#f97316', material: 'PLA', inStock: false, comingSoon: true, priceSmall: 2.50, priceLarge: 6.00 },
         ];
 
         const EMAIL_RECIPIENT = "3d.druck.rorbas@gmail.com";
@@ -139,7 +151,8 @@
         const ViewState = {
             HOME: 'HOME',
             ORDER: 'ORDER',
-            SUCCESS: 'SUCCESS'
+            SUCCESS: 'SUCCESS',
+            BANNED: 'BANNED'
         };
 
         // --- COMPONENTS ---
@@ -177,9 +190,30 @@
             );
         };
 
+        // Banned Screen Component
+        const BannedScreen = () => (
+            <div className="min-h-screen bg-red-950 flex flex-col items-center justify-center px-4 text-center">
+                <div className="p-8 bg-red-900/50 border border-red-500/50 rounded-2xl shadow-2xl backdrop-blur-md max-w-md w-full">
+                    <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <ShieldBan className="h-10 w-10 text-red-500" />
+                    </div>
+                    <h1 className="text-3xl font-bold text-white mb-4">Zugriff Verweigert</h1>
+                    <p className="text-red-200 mb-6 text-lg">
+                        Du wurdest von dieser Seite gesperrt. <br/>
+                        Enrique & Jack tolerieren keinen Missbrauch.
+                    </p>
+                    <div className="text-xs text-red-400 font-mono bg-red-950/50 p-2 rounded">
+                        Error: USER_BLACKLISTED
+                    </div>
+                </div>
+            </div>
+        );
+
         // Navbar Component
         const Navbar = ({ currentView, onNavigate }) => {
             const [isOpen, setIsOpen] = React.useState(false);
+
+            if (currentView === ViewState.BANNED) return null;
 
             return (
                 <nav className="fixed w-full z-50 bg-slate-900/80 backdrop-blur-md border-b border-slate-800">
@@ -411,7 +445,7 @@
         };
 
         // OrderForm Component
-        const OrderForm = ({ onCancel, onSubmitSuccess }) => {
+        const OrderForm = ({ onCancel, onSubmitSuccess, userIp }) => {
             const [formData, setFormData] = React.useState({
                 projectDescription: '',
                 filamentMode: 'stock',
@@ -423,6 +457,7 @@
             });
 
             const [selectedMaterialCategory, setSelectedMaterialCategory] = React.useState('PLA');
+            const [activePriceId, setActivePriceId] = React.useState(null); // State für Preis-Anzeige
             const [isSubmitting, setIsSubmitting] = React.useState(false);
             const [showMaterialInfo, setShowMaterialInfo] = React.useState(false);
             const [attachedFile, setAttachedFile] = React.useState(null);
@@ -458,6 +493,8 @@
                 data.append('Email', formData.userEmail);
                 data.append('Telefon', formData.userPhone || 'Nicht angegeben');
                 data.append('Beschreibung', formData.projectDescription);
+                // Send User IP safely to Formspree
+                data.append('IP-Adresse', userIp || 'Nicht erkannt');
 
                 // Material Logic
                 const selectedStock = STOCK_FILAMENTS.find(f => f.id === formData.selectedFilamentId);
@@ -716,36 +753,66 @@
                                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 animate-fadeIn" key={selectedMaterialCategory}>
                                                 {filteredFilaments.length > 0 ? (
                                                     filteredFilaments.map(filament => (
-                                                        <button
-                                                            type="button"
-                                                            key={filament.id}
-                                                            disabled={!filament.inStock}
-                                                            onClick={() => setFormData({...formData, selectedFilamentId: filament.id})}
-                                                            className={`relative p-3 rounded-lg border text-left transition-all group ${
-                                                                formData.selectedFilamentId === filament.id 
-                                                                    ? 'border-brand-500 ring-1 ring-brand-500 bg-slate-800' 
-                                                                    : 'border-slate-700 bg-slate-900 hover:border-slate-500'
-                                                            } ${!filament.inStock ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                                        >
-                                                            <div className="flex items-center justify-between mb-2">
-                                                                <div 
-                                                                    className="w-6 h-6 rounded-full border border-slate-600 shadow-sm" 
-                                                                    style={{backgroundColor: filament.colorHex}} 
-                                                                />
-                                                                {filament.material === 'TPU' && <span className="text-[10px] font-bold bg-slate-700 px-1 rounded text-slate-300">FLEX</span>}
-                                                            </div>
-                                                            <div className="text-sm font-medium text-white truncate">{filament.name}</div>
-                                                            <div className="text-xs text-slate-500">{filament.color}</div>
-                                                            {!filament.inStock && (
-                                                                <div className="absolute inset-0 bg-slate-900/60 flex items-center justify-center rounded-lg backdrop-blur-[1px]">
-                                                                    {filament.comingSoon ? (
-                                                                        <span className="text-xs font-bold text-amber-400 transform -rotate-12 border border-amber-400 px-2 py-1 rounded whitespace-nowrap shadow-lg bg-slate-900/50">Bald verfügbar</span>
-                                                                    ) : (
-                                                                        <span className="text-xs font-bold text-red-400 transform -rotate-12 border border-red-400 px-2 py-1 rounded shadow-lg bg-slate-900/50">Ausverkauft</span>
-                                                                    )}
+                                                        <div key={filament.id} className="relative group">
+                                                            {/* Haupt-Auswahl-Button */}
+                                                            <button
+                                                                type="button"
+                                                                disabled={!filament.inStock}
+                                                                onClick={() => setFormData({...formData, selectedFilamentId: filament.id})}
+                                                                className={`w-full relative p-3 rounded-lg border text-left transition-all group ${
+                                                                    formData.selectedFilamentId === filament.id 
+                                                                        ? 'border-brand-500 ring-1 ring-brand-500 bg-slate-800' 
+                                                                        : 'border-slate-700 bg-slate-900 hover:border-slate-500'
+                                                                } ${!filament.inStock ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                            >
+                                                                <div className="flex items-center justify-between mb-2">
+                                                                    <div 
+                                                                        className="w-6 h-6 rounded-full border border-slate-600 shadow-sm" 
+                                                                        style={{backgroundColor: filament.colorHex}} 
+                                                                    />
+                                                                    {filament.material === 'TPU' && <span className="text-[10px] font-bold bg-slate-700 px-1 rounded text-slate-300">FLEX</span>}
+                                                                </div>
+                                                                <div className="text-sm font-medium text-white truncate pr-4">{filament.name}</div>
+                                                                <div className="text-xs text-slate-500">{filament.color}</div>
+                                                                
+                                                                {!filament.inStock && (
+                                                                    <div className="absolute inset-0 bg-slate-900/60 flex items-center justify-center rounded-lg backdrop-blur-[1px] z-10">
+                                                                        {filament.comingSoon ? (
+                                                                            <span className="text-xs font-bold text-amber-400 transform -rotate-12 border border-amber-400 px-2 py-1 rounded whitespace-nowrap shadow-lg bg-slate-900/50">Bald verfügbar</span>
+                                                                        ) : (
+                                                                            <span className="text-xs font-bold text-red-400 transform -rotate-12 border border-red-400 px-2 py-1 rounded shadow-lg bg-slate-900/50">Ausverkauft</span>
+                                                                        )}
+                                                                    </div>
+                                                                )}
+                                                            </button>
+
+                                                            {/* Preis-Toggle-Button (oben rechts) */}
+                                                            <button
+                                                                type="button"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    e.preventDefault();
+                                                                    setActivePriceId(activePriceId === filament.id ? null : filament.id);
+                                                                }}
+                                                                className="absolute top-2 right-2 z-20 p-1.5 rounded-full bg-slate-700/50 hover:bg-brand-600 text-slate-300 hover:text-white transition-colors"
+                                                                title="Preisinfo anzeigen"
+                                                            >
+                                                                <Tag className="w-3 h-3" />
+                                                            </button>
+
+                                                            {/* Preis-Overlay */}
+                                                            {activePriceId === filament.id && (
+                                                                <div className="absolute inset-0 z-30 bg-slate-800/95 backdrop-blur-sm rounded-lg flex flex-col items-center justify-center text-center p-2 animate-fadeIn border border-brand-500/50"
+                                                                     onClick={(e) => { e.stopPropagation(); setActivePriceId(null); }}>
+                                                                    <h5 className="text-xs font-bold text-brand-400 mb-1">Richtpreise</h5>
+                                                                    <div className="space-y-1 mb-1">
+                                                                        <p className="text-xs text-white"><span className="text-slate-400">&lt; 50g:</span> {filament.priceSmall.toFixed(2)} CHF</p>
+                                                                        <p className="text-xs text-white"><span className="text-slate-400">/ 100g:</span> {filament.priceLarge.toFixed(2)} CHF</p>
+                                                                    </div>
+                                                                    <p className="text-[10px] text-slate-500 mt-1">(Klicken zum Schließen)</p>
                                                                 </div>
                                                             )}
-                                                        </button>
+                                                        </div>
                                                     ))
                                                 ) : (
                                                     <div className="col-span-full py-8 text-center text-slate-500 bg-slate-900/30 rounded-lg border border-slate-800 border-dashed">
@@ -887,6 +954,26 @@
         const App = () => {
             const [view, setView] = React.useState(ViewState.HOME);
             const [lastOrderHadAttachment, setLastOrderHadAttachment] = React.useState(false);
+            const [userIp, setUserIp] = React.useState('');
+
+            // IP check beim Start der App
+            React.useEffect(() => {
+                const checkIp = async () => {
+                    try {
+                        const response = await fetch('https://api.ipify.org?format=json');
+                        const data = await response.json();
+                        setUserIp(data.ip);
+                        
+                        if (BLACKLISTED_IPS.includes(data.ip)) {
+                            setView(ViewState.BANNED);
+                        }
+                    } catch (error) {
+                        console.error('IP fetch failed', error);
+                        // Im Fehlerfall nicht sperren, aber IP auch nicht speichern
+                    }
+                };
+                checkIp();
+            }, []);
 
             const handleStartOrder = () => {
                 setView(ViewState.ORDER);
@@ -898,6 +985,10 @@
                 setView(ViewState.SUCCESS);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             };
+
+            if (view === ViewState.BANNED) {
+                return <BannedScreen />;
+            }
 
             return (
                 <div className="min-h-screen bg-slate-950 flex flex-col font-sans">
@@ -916,6 +1007,7 @@
                                 <OrderForm 
                                     onCancel={() => setView(ViewState.HOME)} 
                                     onSubmitSuccess={handleOrderSuccess}
+                                    userIp={userIp}
                                 />
                             </div>
                         )}
