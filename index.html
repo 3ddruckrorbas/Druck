@@ -121,13 +121,13 @@
 
         // --- CONSTANTS ---
         
-        // HIER KÖNNT IHR IP-ADRESSEN SPERREN
-        // Beispiel: "192.168.1.1" (als Strings in Anführungszeichen, getrennt durch Komma)
-        // MAC-Adressen können im Browser technisch nicht ausgelesen werden (Sicherheitsstandard aller Browser).
-        const BLACKLISTED_IPS = [
-             "1.2.3.4", // Beispiel IP
-             "",
-             // Fügt hier weitere IPs hinzu, z.B.: "85.2.10.122"
+        // HIER KÖNNT IHR GERÄTE SPERREN (Device IDs)
+        // ACHTUNG: MAC-Adressen können im Browser technisch NICHT ausgelesen werden.
+        // Stattdessen nutzen wir nun eine generierte "Device ID", die im Browser des Nutzers gespeichert wird.
+        // Diese ID wird mit der Anfrage gesendet. Wenn jemand nervt, kopiere seine "Device-ID" aus der Email hier rein.
+        const BLACKLISTED_IDS = [
+             "example-id-123456", 
+             // Fügt hier Device IDs hinzu, die gesperrt werden sollen
         ];
 
         // Preisstruktur: priceSmall (< 50g), priceLarge (pro 100g)
@@ -154,6 +154,26 @@
             ORDER: 'ORDER',
             SUCCESS: 'SUCCESS',
             BANNED: 'BANNED'
+        };
+
+        // --- HELPERS ---
+
+        // Generiert eine zufällige UUID (Ersatz für MAC)
+        const generateUUID = () => {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        };
+
+        // Holt oder erstellt die Device ID
+        const getDeviceId = () => {
+            let id = localStorage.getItem('rorbas_device_id');
+            if (!id) {
+                id = generateUUID();
+                localStorage.setItem('rorbas_device_id', id);
+            }
+            return id;
         };
 
         // --- COMPONENTS ---
@@ -200,11 +220,11 @@
                     </div>
                     <h1 className="text-3xl font-bold text-white mb-4">Zugriff Verweigert</h1>
                     <p className="text-red-200 mb-6 text-lg">
-                        Du wurdest von dieser Seite gesperrt. <br/>
+                        Dein Gerät wurde gesperrt. <br/>
                         Enrique & Jack tolerieren keinen Missbrauch.
                     </p>
                     <div className="text-xs text-red-400 font-mono bg-red-950/50 p-2 rounded">
-                        Error: USER_BLACKLISTED
+                        Error: DEVICE_BLACKLISTED
                     </div>
                 </div>
             </div>
@@ -446,7 +466,7 @@
         };
 
         // OrderForm Component
-        const OrderForm = ({ onCancel, onSubmitSuccess, userIp }) => {
+        const OrderForm = ({ onCancel, onSubmitSuccess, deviceId }) => {
             const [formData, setFormData] = React.useState({
                 projectDescription: '',
                 filamentMode: 'stock',
@@ -494,8 +514,8 @@
                 data.append('Email', formData.userEmail);
                 data.append('Telefon', formData.userPhone || 'Nicht angegeben');
                 data.append('Beschreibung', formData.projectDescription);
-                // Send User IP safely to Formspree
-                data.append('IP-Adresse', userIp || 'Nicht erkannt');
+                // Send User Device ID safely to Formspree
+                data.append('Device-ID', deviceId || 'Nicht erkannt');
 
                 // Material Logic
                 const selectedStock = STOCK_FILAMENTS.find(f => f.id === formData.selectedFilamentId);
@@ -955,25 +975,17 @@
         const App = () => {
             const [view, setView] = React.useState(ViewState.HOME);
             const [lastOrderHadAttachment, setLastOrderHadAttachment] = React.useState(false);
-            const [userIp, setUserIp] = React.useState('');
+            const [deviceId, setDeviceId] = React.useState('');
 
-            // IP check beim Start der App
+            // Device ID check beim Start der App
             React.useEffect(() => {
-                const checkIp = async () => {
-                    try {
-                        const response = await fetch('https://api.ipify.org?format=json');
-                        const data = await response.json();
-                        setUserIp(data.ip);
-                        
-                        if (BLACKLISTED_IPS.includes(data.ip)) {
-                            setView(ViewState.BANNED);
-                        }
-                    } catch (error) {
-                        console.error('IP fetch failed', error);
-                        // Im Fehlerfall nicht sperren, aber IP auch nicht speichern
-                    }
-                };
-                checkIp();
+                const id = getDeviceId();
+                setDeviceId(id);
+                
+                // Prüfen ob ID in Blacklist ist
+                if (BLACKLISTED_IDS.includes(id)) {
+                    setView(ViewState.BANNED);
+                }
             }, []);
 
             const handleStartOrder = () => {
@@ -1008,7 +1020,7 @@
                                 <OrderForm 
                                     onCancel={() => setView(ViewState.HOME)} 
                                     onSubmitSuccess={handleOrderSuccess}
-                                    userIp={userIp}
+                                    deviceId={deviceId}
                                 />
                             </div>
                         )}
