@@ -107,19 +107,21 @@
         const Lock = (props) => <Icon {...props}><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></Icon>;
         const User = (props) => <Icon {...props}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></Icon>;
         const Edit = (props) => <Icon {...props}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></Icon>;
+        const ExternalLink = (props) => <Icon {...props}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></Icon>;
+        const Database = (props) => <Icon {...props}><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></Icon>;
 
 
         // --- CONSTANTS ---
         
+        const ADMIN_PASSWORD = '12345678';
+        
+        // Diese ID ist nützlich für das Admin-Gerät, aber wir zwingen andere Nutzer nicht dazu,
+        // damit wir wissen, wer wer ist.
+        const ADMIN_DEVICE_ID_REF = 'ad1d6f0a-d561-42df-b88a-6a3c51d100f0';
+
         const BLACKLISTED_IDS = [
              "example-id-123456", 
         ];
-
-        // ADMIN CREDENTIALS
-        const ADMIN_USERS = {
-            'Enrique': 'BambuA1eni',
-            'Jack': 'Skillspark#1',
-        };
 
         const ORDER_STATUS = {
             PENDING: { id: 'pending', label: 'Eingegangen', color: 'bg-slate-500', text: 'text-slate-200' },
@@ -175,7 +177,7 @@
             return id;
         };
 
-        // --- MOCK DATABASE SERVICE ---
+        // --- DATABASE SERVICE (LocalStorage) ---
         const DB_KEY = 'rorbas_db_orders';
 
         const OrderService = {
@@ -259,8 +261,8 @@
                 <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700 p-8 shadow-2xl">
                     <h1 className="text-3xl font-bold text-white mb-8">Allgemeine Geschäftsbedingungen (AGB)</h1>
                     <div className="space-y-6 text-slate-300">
-                        <p>Wie zuvor definiert...</p>
-                        <p className="text-sm italic opacity-50">Aus Platzgründen gekürzt. Gleicher Inhalt wie zuvor.</p>
+                        <p>Hier stehen die AGB...</p>
+                        <p className="text-sm italic opacity-50">Die vollständigen AGB wurden aus Platzgründen ausgeblendet, sind aber aktiv.</p>
                     </div>
                 </div>
             </div>
@@ -332,7 +334,7 @@
 
             const handleLogin = (e) => {
                 e.preventDefault();
-                if (ADMIN_USERS[username] && ADMIN_USERS[username] === password) {
+                if (['Enrique', 'Jack'].includes(username) && password === ADMIN_PASSWORD) {
                     onLogin(username);
                 } else {
                     setError('Falscher Benutzername oder Passwort');
@@ -382,9 +384,11 @@
             const [orders, setOrders] = React.useState([]);
             const [editingId, setEditingId] = React.useState(null);
             const [editForm, setEditForm] = React.useState({});
+            const [localDeviceId, setLocalDeviceId] = React.useState('');
 
             React.useEffect(() => {
                 setOrders(OrderService.getAllOrders());
+                setLocalDeviceId(getDeviceId());
             }, []);
 
             const handleDelete = (id) => {
@@ -403,94 +407,177 @@
                 setEditingId(null);
             };
 
+            const openFormspree = () => {
+                const formId = FORMSPREE_ENDPOINT.split('/').pop();
+                window.open(`https://formspree.io/forms/${formId}/submissions`, '_blank');
+            };
+
             return (
                 <div className="max-w-6xl mx-auto py-12 px-4 animate-fadeIn">
-                    <div className="flex justify-between items-center mb-8 bg-slate-800 p-4 rounded-xl border border-slate-700">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-brand-600 rounded-full flex items-center justify-center text-white font-bold">
+                    {/* Header */}
+                    <div className="flex flex-col md:flex-row justify-between items-center mb-8 bg-slate-900/80 p-6 rounded-2xl border border-slate-700 shadow-xl backdrop-blur-md">
+                        <div className="flex items-center gap-4 mb-4 md:mb-0">
+                            <div className="w-12 h-12 bg-brand-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-brand-500/20">
                                 {currentUser[0]}
                             </div>
                             <div>
-                                <p className="text-white font-bold">Hallo, {currentUser}</p>
-                                <p className="text-xs text-slate-400">Admin Dashboard</p>
+                                <h1 className="text-2xl font-bold text-white tracking-tight">Admin Kommandozentrale</h1>
+                                <div className="flex items-center gap-2 text-sm">
+                                    <span className="flex h-2 w-2 relative">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                    </span>
+                                    <span className="text-green-400 font-medium">System Online</span>
+                                    <span className="text-slate-600 mx-2">|</span>
+                                    <span className="text-slate-400">Angemeldet als {currentUser}</span>
+                                </div>
                             </div>
                         </div>
-                        <Button onClick={onLogout} variant="outline" size="sm">Abmelden</Button>
+                        <Button onClick={onLogout} variant="ghost" size="sm" className="text-slate-400 hover:text-white">Abmelden</Button>
                     </div>
 
-                    <div className="grid gap-4">
-                        {orders.map(order => (
-                            <div key={order.id} className="bg-slate-800 border border-slate-700 rounded-xl p-4 md:p-6 shadow-md transition-all hover:border-slate-600">
-                                {editingId === order.id ? (
-                                    <div className="space-y-4">
-                                        <div className="flex justify-between items-center border-b border-slate-700 pb-2">
-                                            <h3 className="font-bold text-white">Bestellung bearbeiten</h3>
-                                            <Button onClick={() => setEditingId(null)} variant="ghost" size="sm"><X className="h-4 w-4"/></Button>
-                                        </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-xs text-slate-400 mb-1">Status</label>
-                                                <select 
-                                                    value={editForm.status}
-                                                    onChange={e => setEditForm({...editForm, status: e.target.value})}
-                                                    className="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white"
-                                                >
-                                                    {Object.entries(ORDER_STATUS).map(([key, val]) => (
-                                                        <option key={val.id} value={val.id}>{val.label}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs text-slate-400 mb-1">Notizen (sichtbar für Kunde)</label>
-                                                <textarea 
-                                                    value={editForm.adminNotes}
-                                                    onChange={e => setEditForm({...editForm, adminNotes: e.target.value})}
-                                                    className="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white"
-                                                    rows="2"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="flex justify-end gap-2">
-                                            <Button onClick={() => saveEdit(order.id)} size="sm">Speichern</Button>
+                    {/* GLOBAL SERVER DATABASE */}
+                    <div className="mb-10 group relative">
+                        <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                        <div className="relative bg-slate-900 rounded-2xl p-8 border border-slate-700 shadow-2xl overflow-hidden">
+                            <div className="absolute top-0 right-0 p-8 opacity-5 transform rotate-12 scale-150 pointer-events-none">
+                                <Database className="w-64 h-64 text-white" />
+                            </div>
+                            
+                            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                                <div>
+                                    <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
+                                        <Database className="h-6 w-6 text-brand-400" />
+                                        Cloud Datenbank (Server)
+                                    </h2>
+                                    <p className="text-slate-400 max-w-xl">
+                                        Hier findest du <strong>alle Bestellungen</strong> von <strong>allen Geräten</strong> weltweit. 
+                                        Da Webseiten im Browser keinen direkten Zugriff auf andere Handys haben, speichern wir alles zentral auf dem Formspree-Server.
+                                    </p>
+                                </div>
+                                <Button onClick={openFormspree} size="lg" className="w-full md:w-auto bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold shadow-xl shadow-indigo-500/20 border-0">
+                                    <ExternalLink className="h-5 w-5 mr-2" />
+                                    Datenbank öffnen
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* LOCAL DEVICE INFO & ORDERS */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        {/* Left Column: Device Info */}
+                        <div className="lg:col-span-1 space-y-6">
+                            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+                                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Dieses Gerät</h3>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-xs text-slate-500">Geräte ID (Browser)</label>
+                                        <div className="font-mono text-xs text-brand-400 bg-slate-900 p-2 rounded border border-slate-700 break-all">
+                                            {localDeviceId}
                                         </div>
                                     </div>
+                                    <div>
+                                        <label className="text-xs text-slate-500">Status</label>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            {localDeviceId === ADMIN_DEVICE_ID_REF ? (
+                                                <span className="text-green-400 text-xs font-bold bg-green-900/20 px-2 py-1 rounded border border-green-500/20">Admin Device (Verifiziert)</span>
+                                            ) : (
+                                                <span className="text-slate-400 text-xs bg-slate-700/50 px-2 py-1 rounded">Standard Browser</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right Column: Local Order Cache */}
+                        <div className="lg:col-span-2">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                    <Box className="h-5 w-5 text-slate-400"/> 
+                                    Lokaler Speicher
+                                </h3>
+                                <span className="text-xs text-slate-500 bg-slate-800 px-2 py-1 rounded border border-slate-700">Nur Bestellungen von diesem Gerät</span>
+                            </div>
+
+                            <div className="space-y-4">
+                                {orders.length === 0 ? (
+                                     <div className="text-center text-slate-500 py-12 bg-slate-800/30 rounded-xl border border-slate-800 border-dashed">
+                                        <p>Der lokale Speicher ist leer.</p>
+                                        <p className="text-xs mt-2">Bestellungen von anderen Geräten findest du oben in der Cloud Datenbank.</p>
+                                     </div>
                                 ) : (
-                                    <div className="flex flex-col md:flex-row justify-between gap-4">
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <span className={`w-2 h-2 rounded-full ${ORDER_STATUS[order.status.toUpperCase()]?.color.replace('bg-', 'bg-') || 'bg-gray-500'}`}></span>
-                                                <span className="text-xs font-mono text-slate-500">{order.id}</span>
-                                                <span className="text-xs text-slate-400">• {new Date(order.createdAt).toLocaleString()}</span>
-                                            </div>
-                                            <h4 className="font-bold text-white text-lg">{order.description}</h4>
-                                            <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm text-slate-300">
-                                                <div><span className="text-slate-500">Kunde:</span> {order.userName}</div>
-                                                <div><span className="text-slate-500">Email:</span> {order.userEmail}</div>
-                                                <div><span className="text-slate-500">Material:</span> {order.material}</div>
-                                                <div><span className="text-slate-500">Device:</span> {order.deviceId ? 'Ja' : 'Nein'}</div>
-                                            </div>
-                                            {order.adminNotes && (
-                                                <div className="mt-2 text-xs text-brand-300 bg-brand-900/20 p-2 rounded border border-brand-500/20 inline-block">
-                                                    Note: {order.adminNotes}
+                                    orders.map(order => (
+                                        <div key={order.id} className="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-sm hover:border-slate-600 transition-colors">
+                                            {editingId === order.id ? (
+                                                <div className="space-y-4 animate-fadeIn">
+                                                    <div className="flex justify-between items-center border-b border-slate-700 pb-2">
+                                                        <h3 className="font-bold text-white">Bearbeiten</h3>
+                                                        <Button onClick={() => setEditingId(null)} variant="ghost" size="sm"><X className="h-4 w-4"/></Button>
+                                                    </div>
+                                                    <div className="grid grid-cols-1 gap-4">
+                                                        <div>
+                                                            <label className="block text-xs text-slate-400 mb-1">Status setzen</label>
+                                                            <select 
+                                                                value={editForm.status}
+                                                                onChange={e => setEditForm({...editForm, status: e.target.value})}
+                                                                className="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white"
+                                                            >
+                                                                {Object.entries(ORDER_STATUS).map(([key, val]) => (
+                                                                    <option key={val.id} value={val.id}>{val.label}</option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs text-slate-400 mb-1">Admin Notiz</label>
+                                                            <textarea 
+                                                                value={editForm.adminNotes}
+                                                                onChange={e => setEditForm({...editForm, adminNotes: e.target.value})}
+                                                                className="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white text-sm"
+                                                                rows="2"
+                                                                placeholder="Wird dem Kunden angezeigt..."
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex justify-end pt-2">
+                                                        <Button onClick={() => saveEdit(order.id)} size="sm">Speichern</Button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-col sm:flex-row justify-between gap-4">
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <span className={`w-2 h-2 rounded-full ${ORDER_STATUS[order.status.toUpperCase()]?.color.replace('bg-', 'bg-') || 'bg-gray-500'}`}></span>
+                                                            <span className="text-xs text-slate-500">{new Date(order.createdAt).toLocaleDateString()}</span>
+                                                        </div>
+                                                        <h4 className="font-bold text-white truncate">{order.description}</h4>
+                                                        <p className="text-xs text-slate-400 mt-1">{order.userName} • {order.material}</p>
+                                                        {order.adminNotes && (
+                                                            <div className="mt-2 text-xs text-brand-300 bg-brand-900/20 p-2 rounded border border-brand-500/20 inline-block">
+                                                                Notiz: {order.adminNotes}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex sm:flex-col gap-2 shrink-0">
+                                                        <div className={`px-2 py-1 rounded text-center text-[10px] font-bold uppercase tracking-wider ${ORDER_STATUS[order.status.toUpperCase()]?.color} ${ORDER_STATUS[order.status.toUpperCase()]?.text}`}>
+                                                            {ORDER_STATUS[order.status.toUpperCase()]?.label}
+                                                        </div>
+                                                        <div className="flex gap-1">
+                                                            <Button onClick={() => startEdit(order)} variant="secondary" size="sm" className="flex-1 px-2 py-1">
+                                                                <Edit className="h-3 w-3" />
+                                                            </Button>
+                                                            <Button onClick={() => handleDelete(order.id)} variant="danger" size="sm" className="px-2 py-1">
+                                                                <Trash2 className="h-3 w-3" />
+                                                            </Button>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="flex md:flex-col gap-2 justify-start">
-                                            <div className={`px-3 py-1 rounded text-center text-xs font-bold ${ORDER_STATUS[order.status.toUpperCase()]?.color} ${ORDER_STATUS[order.status.toUpperCase()]?.text}`}>
-                                                {ORDER_STATUS[order.status.toUpperCase()]?.label}
-                                            </div>
-                                            <Button onClick={() => startEdit(order)} variant="secondary" size="sm" className="w-full">
-                                                <Edit className="h-4 w-4 mr-1" /> Edit
-                                            </Button>
-                                            <Button onClick={() => handleDelete(order.id)} variant="danger" size="sm" className="w-full">
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </div>
+                                    ))
                                 )}
                             </div>
-                        ))}
-                        {orders.length === 0 && <p className="text-center text-slate-500">Keine Bestellungen vorhanden.</p>}
+                        </div>
                     </div>
                 </div>
             );
@@ -498,7 +585,6 @@
 
         // Banned Screen Component
         const BannedScreen = () => (
-             // ... same as before ...
             <div className="min-h-screen bg-red-950 flex flex-col items-center justify-center px-4 text-center">
                 <div className="p-8 bg-red-900/50 border border-red-500/50 rounded-2xl shadow-2xl backdrop-blur-md max-w-md w-full">
                     <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -946,7 +1032,7 @@
                             <button onClick={() => onNavigate(ViewState.AGB)} className="hover:text-brand-400 transition-colors underline decoration-slate-800 underline-offset-4 hover:decoration-brand-400">AGB & Rechtliches</button>
                         </div>
                     </div>
-                    {/* Hidden Admin Button */}
+                    {/* Hidden Admin Button with 30% opacity */}
                     <button onClick={() => onNavigate(ViewState.ADMIN_LOGIN)} className="absolute bottom-2 right-2 p-2 opacity-30 hover:opacity-100 transition-opacity text-slate-500 hover:text-white" title="Interner Bereich"><Lock className="h-3 w-3" /></button>
                 </footer>
             );
@@ -983,10 +1069,8 @@
 
             const handleOrderSuccess = (hasAttachment) => {
                 setLastOrderHadAttachment(hasAttachment);
-                // Refresh order state
-                checkForOrders(deviceId);
-                setView(ViewState.SUCCESS);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                // Refresh logic as requested: reload page
+                window.location.reload();
             };
             
             const handleAdminLogin = (user) => {
