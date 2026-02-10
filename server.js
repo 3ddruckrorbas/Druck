@@ -5,10 +5,20 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
+// --- KONFIGURATION ---
+// HIER DEINE FORMSPREE URL EINFÜGEN!
+const FORMSPREE_URL = "https://formspree.io/f/xjgevaln"; 
+
+const WHITELISTED_DEVICES = ['7e4cf2', '8ff9a9', '0c6f21', '8bd4f8'];
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'database.json');
 const FILAMENTS_FILE = path.join(__dirname, 'filaments.json');
+const SETTINGS_FILE = path.join(__dirname, 'settings.json');
+
+// In-Memory Storage for 2FA Codes (Map: deviceId -> { code, expires })
+const pending2FA = new Map();
 
 // Default Filaments (Initial Seed)
 const DEFAULT_FILAMENTS = [
@@ -24,6 +34,10 @@ const DEFAULT_FILAMENTS = [
     { id: '10', name: 'PETG Signalblau', color: 'Blau', colorHex: '#2563eb', material: 'PETG', inStock: true },
     { id: '11', name: 'PETG Transparent', color: 'Klar', colorHex: '#E5E7EB', material: 'PETG', inStock: false },
 ];
+
+const DEFAULT_SETTINGS = {
+    passwords: ['A1Carbon3d']
+};
 
 // Middleware
 app.use(cors());
@@ -48,6 +62,25 @@ const writeJsonFile = (filePath, data) => {
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
 };
 
+const sendEmail = async (subject, message) => {
+    if (!FORMSPREE_URL || FORMSPREE_URL.includes("deine-id")) {
+        console.log("Email Simulation (Log):", subject, message);
+        return;
+    }
+    try {
+        await fetch(FORMSPREE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                subject: subject,
+                message: message
+            })
+        });
+    } catch (error) {
+        console.error("Formspree Error:", error);
+    }
+};
+
 // --- ROUTES: ORDERS ---
 
 app.get('/api/orders', (req, res) => {
@@ -64,7 +97,7 @@ app.get('/api/orders', (req, res) => {
     res.json(orders);
 });
 
-app.post('/api/orders', (req, res) => {
+app.post('/api/orders', async (req, res) => {
     const orders = readJsonFile(DATA_FILE);
     const newOrder = {
         id: crypto.randomUUID(),
@@ -76,6 +109,31 @@ app.post('/api/orders', (req, res) => {
     
     orders.push(newOrder);
     writeJsonFile(DATA_FILE, orders);
+
+    // E-Mail Benachrichtigung senden
+    const emailSubject = `Neue Bestellung von ${newOrder.userName}`;
+    const emailBody = `
+Ein neuer Auftrag ist eingegangen!
+
+Kunde: ${newOrder.userName}
+Email: ${newOrder.userEmail}
+Telefon: ${newOrder.userPhone || 'Nicht angegeben'}
+
+Beschreibung:
+${newOrder.description}
+
+Material:
+${newOrder.material}
+
+Lieferadresse:
+${newOrder.street}
+${newOrder.zip} ${newOrder.city}
+
+Bestell-ID: ${newOrder.id}
+    `.trim();
+
+    await sendEmail(emailSubject, emailBody);
+
     res.status(201).json(newOrder);
 });
 
@@ -154,6 +212,93 @@ app.delete('/api/filaments/:id', (req, res) => {
     res.json(filaments);
 });
 
+// --- ROUTES: SETTINGS / AUTH ---
+
+app.post('/api/auth/login', async (req, res) => {
+    const { password, deviceId } = req.body;
+    const settings = readJsonFile(SETTINGS_FILE, DEFAULT_SETTINGS);
+    
+    if (settings.passwords.includes(password)) {
+        // Password correct. Check whitelist.
+        // Check if deviceId starts with any of the whitelisted IDs
+        const isWhitelisted = deviceId && WHITELISTED_DEVICES.some(id => deviceId.startsWith(id));
+
+        if (isWhitelisted) {
+            return res.json({ success: true, require2FA: false });
+        } else {
+            // Generate 2FA Code
+            const code = Math.floor(100000 + Math.random() * 900000).toString();
+            const expires = Date.now() + 60 * 60 * 1000; // 1 Hour
+
+            pending2FA.set(deviceId, { code, expires });
+
+            // Send Email via Formspree
+            await sendEmail("Rorbas 3D Admin Login Code", `Dein Login-Code ist: ${code}`);
+
+            return res.json({ success: true, require2FA: true });
+        }
+    } else {
+        res.status(401).json({ success: false, error: 'Ungültiges Passwort' });
+    }
+});
+
+app.post('/api/auth/verify', (req, res) => {
+    const { code, deviceId } = req.body;
+    const record = pending2FA.get(deviceId);
+
+    if (!record) {
+        return res.status(401).json({ success: false, error: 'Kein Code angefordert oder Session abgelaufen.' });
+    }
+
+    if (Date.now() > record.expires) {
+        pending2FA.delete(deviceId);
+        return res.status(401).json({ success: false, error: 'Code abgelaufen.' });
+    }
+
+    if (record.code === code) {
+        pending2FA.delete(deviceId); // Consume code
+        return res.json({ success: true });
+    } else {
+        return res.status(401).json({ success: false, error: 'Falscher Code.' });
+    }
+});
+
+app.get('/api/admin/passwords', (req, res) => {
+    const settings = readJsonFile(SETTINGS_FILE, DEFAULT_SETTINGS);
+    res.json(settings.passwords);
+});
+
+app.post('/api/admin/passwords', (req, res) => {
+    const { password } = req.body;
+    if (!password) return res.status(400).json({error: 'Passwort erforderlich'});
+    
+    const settings = readJsonFile(SETTINGS_FILE, DEFAULT_SETTINGS);
+    if (!settings.passwords.includes(password)) {
+        settings.passwords.push(password);
+        writeJsonFile(SETTINGS_FILE, settings);
+    }
+    res.json(settings.passwords);
+});
+
+app.delete('/api/admin/passwords/:password', (req, res) => {
+    const { password } = req.params;
+    let settings = readJsonFile(SETTINGS_FILE, DEFAULT_SETTINGS);
+    
+    // Prevent lockout: don't delete the last password
+    if (settings.passwords.length <= 1 && settings.passwords.includes(password)) {
+         return res.status(400).json({error: 'Das letzte Passwort kann nicht gelöscht werden.'});
+    }
+
+    const initialLength = settings.passwords.length;
+    settings.passwords = settings.passwords.filter(p => p !== password);
+    
+    if (settings.passwords.length !== initialLength) {
+         writeJsonFile(SETTINGS_FILE, settings);
+    }
+    
+    res.json(settings.passwords);
+});
+
 // Fallback: Serve index.html
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
@@ -168,5 +313,8 @@ app.listen(PORT, () => {
     }
     if (!fs.existsSync(FILAMENTS_FILE)) {
         writeJsonFile(FILAMENTS_FILE, DEFAULT_FILAMENTS);
+    }
+    if (!fs.existsSync(SETTINGS_FILE)) {
+        writeJsonFile(SETTINGS_FILE, DEFAULT_SETTINGS);
     }
 });
