@@ -120,12 +120,14 @@
         const RefreshCw = (props) => <Icon {...props}><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></Icon>;
         const ServerIcon = (props) => <Icon {...props}><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/></Icon>;
         const Plus = (props) => <Icon {...props}><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></Icon>;
+        const Eye = (props) => <Icon {...props}><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></Icon>;
+        const EyeOff = (props) => <Icon {...props}><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></Icon>;
+        const Key = (props) => <Icon {...props}><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></Icon>;
 
 
         // --- CONSTANTS ---
         
-        const ADMIN_USER = 'AdminRorbas';
-        const ADMIN_PASSWORD = 'A1Carbon3d';
+        const ADMIN_USER = 'AdminRorbas'; // Legacy constant, kept for reference if needed
         const BLACKLISTED_IDS = ["example-id-123456"];
 
         const ORDER_STATUS = {
@@ -223,6 +225,50 @@
             },
             deleteFilament: async (id) => {
                 const res = await fetch(`${API_URL}/filaments/${id}`, { method: 'DELETE' });
+                return await res.json();
+            },
+
+            // Auth & Settings Routes
+            login: async (password, deviceId) => {
+                const res = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ password, deviceId })
+                });
+                if (!res.ok) throw new Error('Ungültiges Passwort');
+                return await res.json();
+            },
+            verify2FA: async (code, deviceId) => {
+                const res = await fetch(`${API_URL}/auth/verify`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ code, deviceId })
+                });
+                if (!res.ok) throw new Error('Ungültiger Code');
+                return await res.json();
+            },
+            getPasswords: async () => {
+                 try {
+                    const res = await fetch(`${API_URL}/admin/passwords`);
+                    return await res.json();
+                } catch(e) { return []; }
+            },
+            addPassword: async (password) => {
+                const res = await fetch(`${API_URL}/admin/passwords`, {
+                     method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ password })
+                });
+                return await res.json();
+            },
+            deletePassword: async (password) => {
+                 const res = await fetch(`${API_URL}/admin/passwords/${encodeURIComponent(password)}`, {
+                     method: 'DELETE'
+                });
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error || 'Fehler beim Löschen');
+                }
                 return await res.json();
             }
         };
@@ -344,50 +390,108 @@
 
         // Admin Login View
         const AdminLoginView = ({ onLogin, onBack }) => {
-            const [username, setUsername] = React.useState('');
+            const [step, setStep] = React.useState('password'); // 'password' or '2fa'
             const [password, setPassword] = React.useState('');
+            const [showPassword, setShowPassword] = React.useState(false);
+            const [code, setCode] = React.useState('');
             const [error, setError] = React.useState('');
+            const [isLoading, setIsLoading] = React.useState(false);
+            const deviceId = getDeviceId();
 
-            const handleLogin = (e) => {
+            const handlePasswordSubmit = async (e) => {
                 e.preventDefault();
-                if (username === ADMIN_USER && password === ADMIN_PASSWORD) {
-                    onLogin(username);
-                } else {
-                    setError('Falscher Benutzername oder Passwort');
+                setIsLoading(true);
+                setError('');
+                try {
+                    const res = await ApiService.login(password, deviceId);
+                    if(res.success) {
+                        if(res.require2FA) {
+                            setStep('2fa');
+                        } else {
+                            onLogin("Admin");
+                        }
+                    }
+                } catch(e) {
+                    setError('Falsches Passwort');
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
+            const handleCodeSubmit = async (e) => {
+                e.preventDefault();
+                setIsLoading(true);
+                setError('');
+                try {
+                    const res = await ApiService.verify2FA(code, deviceId);
+                    if(res.success) {
+                        onLogin("Admin");
+                    }
+                } catch(e) {
+                    setError('Falscher oder abgelaufener Code');
+                } finally {
+                    setIsLoading(false);
                 }
             };
 
             return (
                 <div className="min-h-[80vh] flex items-center justify-center px-4 animate-fadeIn">
-                    <div className="w-full max-w-md bg-slate-800 border border-slate-700 rounded-2xl p-8 shadow-2xl">
+                    <div className="w-full max-w-md bg-slate-800 border border-slate-700 rounded-2xl p-8 shadow-2xl relative">
                         <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-2xl font-bold text-white">Admin Login</h2>
+                            <h2 className="text-2xl font-bold text-white">
+                                {step === 'password' ? 'Admin Login' : 'Sicherheits-Check'}
+                            </h2>
                             <Button onClick={onBack} variant="ghost" size="sm"><X className="h-5 w-5"/></Button>
                         </div>
+
+                        <div className="absolute top-2 right-2 text-[10px] text-slate-600 font-mono">ID: {deviceId.slice(0,6)}</div>
                         
-                        <form onSubmit={handleLogin} className="space-y-4">
-                            <div>
-                                <label className="block text-xs text-slate-400 mb-1">Benutzername</label>
-                                <input 
-                                    type="text" 
-                                    value={username} 
-                                    onChange={e => setUsername(e.target.value)}
-                                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-brand-500"
-                                    placeholder="AdminRorbas"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs text-slate-400 mb-1">Passwort</label>
-                                <input 
-                                    type="password" 
-                                    value={password}
-                                    onChange={e => setPassword(e.target.value)}
-                                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-brand-500"
-                                />
-                            </div>
-                            {error && <p className="text-red-400 text-sm">{error}</p>}
-                            <Button type="submit" className="w-full">Anmelden</Button>
-                        </form>
+                        {step === 'password' ? (
+                            <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                                <div>
+                                    <label className="block text-xs text-slate-400 mb-1">Passwort</label>
+                                    <div className="relative">
+                                        <input 
+                                            type={showPassword ? "text" : "password"}
+                                            value={password}
+                                            onChange={e => setPassword(e.target.value)}
+                                            className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 pr-10 text-white focus:ring-2 focus:ring-brand-500"
+                                            placeholder="Passwort eingeben"
+                                            autoFocus
+                                        />
+                                        <button 
+                                            type="button" 
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-3 top-3 text-slate-400 hover:text-white"
+                                        >
+                                            {showPassword ? <EyeOff className="h-5 w-5"/> : <Eye className="h-5 w-5"/>}
+                                        </button>
+                                    </div>
+                                </div>
+                                {error && <p className="text-red-400 text-sm">{error}</p>}
+                                <Button type="submit" disabled={isLoading} className="w-full">{isLoading ? 'Prüfe...' : 'Weiter'}</Button>
+                            </form>
+                        ) : (
+                            <form onSubmit={handleCodeSubmit} className="space-y-4 animate-fadeIn">
+                                <div className="p-3 bg-brand-900/20 border border-brand-500/20 rounded-lg text-sm text-brand-300 mb-4">
+                                    Ein Sicherheitscode wurde an die Admin-Email gesendet. Bitte Code eingeben.
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-slate-400 mb-1">6-stelliger Code</label>
+                                    <input 
+                                        type="text" 
+                                        value={code}
+                                        onChange={e => setCode(e.target.value.replace(/[^0-9]/g, '').slice(0,6))}
+                                        className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-center text-xl tracking-widest font-mono focus:ring-2 focus:ring-brand-500"
+                                        placeholder="000000"
+                                        autoFocus
+                                    />
+                                </div>
+                                {error && <p className="text-red-400 text-sm">{error}</p>}
+                                <Button type="submit" disabled={isLoading} className="w-full">{isLoading ? 'Verifiziere...' : 'Bestätigen'}</Button>
+                                <button type="button" onClick={() => setStep('password')} className="w-full text-xs text-slate-500 hover:text-white mt-2">Zurück zum Passwort</button>
+                            </form>
+                        )}
                     </div>
                 </div>
             );
@@ -467,6 +571,80 @@
             );
         };
 
+        // Password Manager Component
+        const PasswordManager = () => {
+            const [passwords, setPasswords] = React.useState([]);
+            const [newPassword, setNewPassword] = React.useState('');
+            const [loading, setLoading] = React.useState(true);
+            const [error, setError] = React.useState('');
+
+            const loadPasswords = async () => {
+                const data = await ApiService.getPasswords();
+                setPasswords(data);
+                setLoading(false);
+            };
+
+            React.useEffect(() => {
+                loadPasswords();
+            }, []);
+
+            const handleAdd = async (e) => {
+                e.preventDefault();
+                if(!newPassword.trim()) return;
+                const updated = await ApiService.addPassword(newPassword);
+                setPasswords(updated);
+                setNewPassword('');
+            };
+
+            const handleDelete = async (pwd) => {
+                if(confirm('Passwort wirklich löschen?')) {
+                    try {
+                        const updated = await ApiService.deletePassword(pwd);
+                        setPasswords(updated);
+                        setError('');
+                    } catch(e) {
+                        setError(e.message);
+                    }
+                }
+            };
+
+            return (
+                 <div className="space-y-6">
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2"><Key className="h-5 w-5 text-brand-400"/> Admin Zugangsdaten</h3>
+                    <p className="text-slate-400 text-sm">Hier können zusätzliche Passwörter für den Admin-Login hinterlegt werden. Diese werden sicher auf dem Server in <code>settings.json</code> gespeichert.</p>
+                    
+                    {error && <div className="p-3 bg-red-900/30 border border-red-500/30 rounded text-red-300 text-sm">{error}</div>}
+
+                    <form onSubmit={handleAdd} className="flex gap-2">
+                        <input 
+                            type="text" 
+                            className="flex-1 bg-slate-800 border border-slate-600 rounded p-2 text-white" 
+                            placeholder="Neues Passwort..." 
+                            value={newPassword}
+                            onChange={e => setNewPassword(e.target.value)}
+                        />
+                        <Button type="submit" size="sm" className="whitespace-nowrap">Passwort hinzufügen</Button>
+                    </form>
+
+                    <div className="bg-slate-900/50 rounded-xl border border-slate-800 overflow-hidden">
+                        {loading ? <div className="p-4 text-center text-slate-500">Lade...</div> : (
+                            <ul className="divide-y divide-slate-800">
+                                {passwords.map((pwd, idx) => (
+                                    <li key={idx} className="p-4 flex items-center justify-between hover:bg-slate-800/50 transition-colors">
+                                        <div className="font-mono text-slate-300">{pwd}</div>
+                                        <button onClick={() => handleDelete(pwd)} className="text-slate-500 hover:text-red-400 p-1" title="Löschen">
+                                            <Trash2 className="h-4 w-4" />
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+
         // Admin Dashboard
         const AdminDashboard = ({ currentUser, onLogout }) => {
             const [orders, setOrders] = React.useState([]);
@@ -474,7 +652,7 @@
             const [editingId, setEditingId] = React.useState(null);
             const [editForm, setEditForm] = React.useState({});
             const [loading, setLoading] = React.useState(true);
-            const [activeTab, setActiveTab] = React.useState('orders'); // 'orders' or 'filaments'
+            const [activeTab, setActiveTab] = React.useState('orders'); // 'orders', 'filaments', 'settings'
 
             const loadData = () => {
                 setLoading(true);
@@ -537,13 +715,18 @@
                         <button onClick={() => setActiveTab('filaments')} className={`px-4 py-2 font-medium text-sm transition-colors relative ${activeTab === 'filaments' ? 'text-brand-400' : 'text-slate-400 hover:text-white'}`}>
                             Materialien {activeTab === 'filaments' && <div className="absolute bottom-[-5px] left-0 w-full h-0.5 bg-brand-400 rounded-full"></div>}
                         </button>
+                        <button onClick={() => setActiveTab('settings')} className={`px-4 py-2 font-medium text-sm transition-colors relative ${activeTab === 'settings' ? 'text-brand-400' : 'text-slate-400 hover:text-white'}`}>
+                            Einstellungen {activeTab === 'settings' && <div className="absolute bottom-[-5px] left-0 w-full h-0.5 bg-brand-400 rounded-full"></div>}
+                        </button>
                     </div>
 
                     <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-                        {loading ? (
+                        {loading && activeTab !== 'settings' ? (
                              <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div></div>
                         ) : activeTab === 'filaments' ? (
                             <FilamentManager filaments={filaments} onChange={setFilaments} />
+                        ) : activeTab === 'settings' ? (
+                            <PasswordManager />
                         ) : (
                             // ORDERS TAB
                             <>
