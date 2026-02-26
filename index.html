@@ -190,6 +190,14 @@
                 });
                 return await res.json();
             },
+            sendQuestion: async (message) => {
+                const res = await fetch(`${API_URL}/questions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+                return await res.json();
+            },
             updateOrder: async (id, updates) => {
                 const res = await fetch(`${API_URL}/orders/${id}`, {
                     method: 'PUT',
@@ -306,74 +314,145 @@
         };
 
         // AGB View
-        const AGBView = ({ onBack }) => (
-            <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 animate-fadeIn">
-                <div className="mb-6">
-                    <Button onClick={onBack} variant="ghost" size="sm" className="gap-2 pl-0 hover:bg-transparent hover:text-brand-400">
-                        <ArrowLeft className="h-4 w-4" /> Zurück
-                    </Button>
-                </div>
-                <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700 p-8 shadow-2xl">
-                    <h1 className="text-3xl font-bold text-white mb-8">Allgemeine Geschäftsbedingungen (AGB)</h1>
-                    <div className="space-y-6 text-slate-300">
-                        <section>
-                            <h2 className="text-xl font-semibold text-white mb-2">§1 Geltungsbereich</h2>
-                            <p>Diese Allgemeinen Geschäftsbedingungen gelten für die Nutzung der Webseite https://3ddruckrorbas.github.io/Druck/ durch private Nutzer.</p>
-                        </section>
+        const AGBView = ({ onBack }) => {
+            const [showQuestionForm, setShowQuestionForm] = React.useState(false);
+            const [question, setQuestion] = React.useState('');
+            const [isSending, setIsSending] = React.useState(false);
+            const [sent, setSent] = React.useState(false);
 
-                        <section>
-                            <h2 className="text-xl font-semibold text-white mb-2">§2 Art des Angebots</h2>
-                            <p>Die Webseite dient der Bereitstellung von Informationen sowie der Kontaktaufnahme im Zusammenhang mit privaten, nicht gewerblichen Leistungen im Bereich 3D-Druck.</p>
-                        </section>
+            const handleSend = async (e) => {
+                e.preventDefault();
+                if (!question.trim()) return;
+                setIsSending(true);
+                try {
+                    await ApiService.sendQuestion(question);
+                    setSent(true);
+                    setQuestion('');
+                    setTimeout(() => setSent(false), 5000);
+                } catch (err) {
+                    alert("Fehler beim Senden der Nachricht.");
+                } finally {
+                    setIsSending(false);
+                }
+            };
 
-                        <section>
-                            <h2 className="text-xl font-semibold text-white mb-2">§3 Vertragsschluss und Ablauf</h2>
-                            <div className="space-y-3 mt-3">
-                                <div className="flex gap-3">
-                                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-brand-400 text-xs font-bold">1</div>
-                                    <p><span className="font-bold text-white">Anfrage:</span> Der Kunde übermittelt dem Anbieter eine unverbindliche Anfrage (inkl. 3D-Modell/Datei und gewünschten Spezifikationen).</p>
-                                </div>
-                                <div className="flex gap-3">
-                                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-brand-400 text-xs font-bold">2</div>
-                                    <p><span className="font-bold text-white">Offerte:</span> Der Anbieter prüft die Anfrage und sendet dem Kunden eine kostenlose Offerte (Angebot) per E-Mail oder über das System zu. Diese Offerte ist, sofern nicht anders angegeben, für einen Zeitraum von [z. B. 14 Tagen] bindend.</p>
-                                </div>
-                                <div className="flex gap-3">
-                                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-brand-400 text-xs font-bold">3</div>
-                                    <p><span className="font-bold text-white">Vertragsschluss:</span> Der Vertrag kommt zustande, sobald der Kunde die Offerte ausdrücklich bestätigt hatt.</p>
-                                </div>
-                                <div className="flex gap-3">
-                                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-brand-400 text-xs font-bold">4</div>
-                                    <p><span className="font-bold text-white">Dateneignung:</span> Mit der Zusage bestätigt der Kunde, dass die übermittelten Daten final sind. Nachträgliche Änderungen am Modell nach Vertragsabschluss können zusätzliche Kosten verursachen.</p>
-                                </div>
+            return (
+                <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 animate-fadeIn">
+                    <div className="mb-6">
+                        <Button onClick={onBack} variant="ghost" size="sm" className="gap-2 pl-0 hover:bg-transparent hover:text-brand-400">
+                            <ArrowLeft className="h-4 w-4" /> Zurück
+                        </Button>
+                    </div>
+                    <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700 p-8 shadow-2xl">
+                        <h1 className="text-3xl font-bold text-white mb-8">Allgemeine Geschäftsbedingungen (AGB)</h1>
+                        <div className="space-y-6 text-slate-300">
+                            <div className="space-y-6 text-slate-300">
+                                <section>
+                                    <h2 className="text-xl font-semibold text-white mb-2">§1 Geltungsbereich</h2>
+                                    <p>Diese Allgemeinen Geschäftsbedingungen gelten für die Nutzung der Webseite https://3ddruckrorbas.github.io/Druck/ durch private Nutzer.</p>
+                                </section>
+
+                                <section>
+                                    <h2 className="text-xl font-semibold text-white mb-2">§2 Art des Angebots</h2>
+                                    <p>Die Webseite dient der Bereitstellung von Informationen sowie der Kontaktaufnahme im Zusammenhang mit privaten, nicht gewerblichen Leistungen im Bereich 3D-Druck.</p>
+                                </section>
+
+                                <section>
+                                    <h2 className="text-xl font-semibold text-white mb-2">§3 Vertragsschluss und Ablauf</h2>
+                                    <div className="space-y-3 mt-3">
+                                        <div className="flex gap-3">
+                                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-brand-400 text-xs font-bold">1</div>
+                                            <p><span className="font-bold text-white">Anfrage:</span> Der Kunde übermittelt dem Anbieter eine unverbindliche Anfrage (inkl. 3D-Modell/Datei und gewünschten Spezifikationen).</p>
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-brand-400 text-xs font-bold">2</div>
+                                            <p><span className="font-bold text-white">Offerte:</span> Der Anbieter prüft die Anfrage und sendet dem Kunden eine kostenlose Offerte (Angebot) per E-Mail oder über das System zu. Diese Offerte ist, sofern nicht anders angegeben, für einen Zeitraum von [z. B. 14 Tagen] bindend.</p>
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-brand-400 text-xs font-bold">3</div>
+                                            <p><span className="font-bold text-white">Vertragsschluss:</span> Der Vertrag kommt zustande, sobald der Kunde die Offerte ausdrücklich bestätigt hatt.</p>
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-brand-400 text-xs font-bold">4</div>
+                                            <p><span className="font-bold text-white">Dateneignung:</span> Mit der Zusage bestätigt der Kunde, dass die übermittelten Daten final sind. Nachträgliche Änderungen am Modell nach Vertragsabschluss können zusätzliche Kosten verursachen.</p>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <section>
+                                    <h2 className="text-xl font-semibold text-white mb-2">§4 Ausschluss des Widerrufsrechts</h2>
+                                    <p>Da 3D-Drucke in der Regel nach Kundenspezifikation angefertigt werden, besteht gemäß § 312g Abs. 2 Nr. 1 BGB kein Widerrufsrecht, sobald die Produktion begonnen hat. Mit der Auftragserteilung bestätigt der Kunde die Kenntnisnahme.</p>
+                                </section>
+
+                                <section>
+                                    <h2 className="text-xl font-semibold text-white mb-2">§5 Preise und Zahlungsbedingungen</h2>
+                                    <div className="space-y-3 mt-3">
+                                        <div className="flex gap-3">
+                                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-brand-400 text-xs font-bold">1</div>
+                                            <p><span className="font-bold text-white">Währung:</span> Alle Preise verstehen sich in Schweizer Franken (CHF).</p>
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-brand-400 text-xs font-bold">2</div>
+                                            <p><span className="font-bold text-white">Zahlung:</span> Da es sich um Individualanfertigungen handelt, erfolgt die Produktion in der Regel erst nach Vorauskasse, sofern nichts anderes vereinbart wurde.</p>
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-brand-400 text-xs font-bold">3</div>
+                                            <p><span className="font-bold text-white">Versand:</span> Versandkosten werden separat ausgewiesen.</p>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <section>
+                                    <h2 className="text-xl font-semibold text-white mb-2">§6 Dateneignung und Haftung</h2>
+                                    <div className="space-y-3 mt-3">
+                                        <div className="flex gap-3">
+                                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-brand-400 text-xs font-bold">1</div>
+                                            <p>Der Kunde trägt die Verantwortung für die Druckbarkeit und Richtigkeit der zugestellten 3D-Daten. Der Anbieter übernimmt keine Haftung für Fehler, die auf mangelhafte Dateien zurückzuführen sind (z.B. Konstruktionsfehler, fehlende Toleranzen).</p>
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-brand-400 text-xs font-bold">2</div>
+                                            <p>Der Anbieter haftet nicht für Schäden, die durch unsachgemässe Verwendung der gedruckten Teile entstehen. 3D-Druckteile sind, sofern nicht anders deklariert, Prototypen und keine zertifizierten Bauteile für sicherheitskritische Anwendungen.</p>
+                                        </div>
+                                    </div>
+                                </section>
                             </div>
-                        </section>
 
-                        <section>
-                            <h2 className="text-xl font-semibold text-white mb-2">§4 Ausschluss des Widerrufsrechts</h2>
-                            <p>Da 3D-Drucke in der Regel nach Kundenspezifikation angefertigt werden, besteht gemäß § 312g Abs. 2 Nr. 1 BGB kein Widerrufsrecht, sobald die Produktion begonnen hat. Mit der Auftragserteilung bestätigt der Kunde die Kenntnisnahme.</p>
-                        </section>
+                            {/* Question Form Section */}
+                            <div className="mt-12 pt-8 border-t border-slate-700">
+                                <button 
+                                    onClick={() => setShowQuestionForm(!showQuestionForm)}
+                                    className="flex items-center gap-2 text-brand-400 hover:text-brand-300 font-semibold transition-colors group"
+                                >
+                                    <HelpCircle className={`h-5 w-5 transition-transform ${showQuestionForm ? 'rotate-12' : ''}`} />
+                                    <span>Frage zum Angebot oder den AGB?</span>
+                                    <ChevronDown className={`h-4 w-4 transition-transform ${showQuestionForm ? 'rotate-180' : ''}`} />
+                                </button>
 
-                        <section>
-                            <h2 className="text-xl font-semibold text-white mb-2">§5 Preise und Zahlungsbedingungen</h2>
-                            <div className="space-y-3 mt-3">
-                                <div className="flex gap-3">
-                                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-brand-400 text-xs font-bold">1</div>
-                                    <p><span className="font-bold text-white">Währung:</span> Alle Preise verstehen sich in Schweizer Franken (CHF).</p>
-                                </div>
-                                <div className="flex gap-3">
-                                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-brand-400 text-xs font-bold">2</div>
-                                    <p><span className="font-bold text-white">Zahlung:</span> Da es sich um Individualanfertigungen handelt, erfolgt die Produktion in der Regel erst nach Vorauskasse, sofern nichts anderes vereinbart wurde.</p>
-                                </div>
-                                <div className="flex gap-3">
-                                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-brand-400 text-xs font-bold">3</div>
-                                    <p><span className="font-bold text-white">Versand:</span> Versandkosten werden separat ausgewiesen.</p>
-                                </div>
+                                {showQuestionForm && (
+                                    <form onSubmit={handleSend} className="mt-6 p-6 bg-slate-900/50 rounded-xl border border-slate-700 animate-slideUp">
+                                        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Deine Nachricht</label>
+                                        <textarea 
+                                            required
+                                            rows="4"
+                                            className="w-full bg-slate-800 border border-slate-700 rounded-lg p-4 text-white placeholder-slate-500 focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+                                            placeholder="Schreibe uns deine Frage..."
+                                            value={question}
+                                            onChange={(e) => setQuestion(e.target.value)}
+                                        />
+                                        <div className="mt-4 flex justify-end items-center gap-4">
+                                            {sent && <span className="text-green-400 text-sm flex items-center gap-1 animate-fadeIn"><CheckCircle2 className="h-4 w-4" /> Gesendet!</span>}
+                                            <Button type="submit" disabled={isSending || !question.trim()} size="sm">
+                                                {isSending ? "Wird gesendet..." : "Frage senden"}
+                                            </Button>
+                                        </div>
+                                    </form>
+                                )}
                             </div>
-                        </section>
+                        </div>
                     </div>
                 </div>
-            </div>
-        );
+            );
+        };
 
         // My Orders View
         const MyOrdersView = ({ deviceId, onBack }) => {
@@ -863,6 +942,7 @@
             const [selectedMaterialCategory, setSelectedMaterialCategory] = React.useState('PLA');
             const [isSubmitting, setIsSubmitting] = React.useState(false);
             const [showMaterialInfo, setShowMaterialInfo] = React.useState(false);
+            const [agbAccepted, setAgbAccepted] = React.useState(false);
 
             const handleSubmit = async (e) => {
                 e.preventDefault();
@@ -971,19 +1051,37 @@
                             </div>
 
                             <div className="pt-6 border-t border-slate-700 flex flex-col sm:flex-row items-center gap-4 justify-between">
-                                <div className="text-xs text-slate-500 flex items-center gap-1">
-                                    Mit dem Absenden akzeptierst du unsere 
-                                    <button 
-                                        type="button" 
-                                        onClick={() => onNavigate(ViewState.AGB)}
-                                        className="text-brand-400 hover:underline font-medium"
-                                    >
-                                        AGB
-                                    </button>
+                                <div className="flex items-center gap-3">
+                                    <label className="flex items-center gap-3 cursor-pointer group">
+                                        <div className="relative flex items-center">
+                                            <input 
+                                                type="checkbox" 
+                                                required
+                                                checked={agbAccepted}
+                                                onChange={(e) => setAgbAccepted(e.target.checked)}
+                                                className="peer h-5 w-5 cursor-pointer appearance-none rounded border border-slate-600 bg-slate-900 checked:bg-brand-500 checked:border-brand-500 transition-all"
+                                            />
+                                            <div className="absolute text-white opacity-0 peer-checked:opacity-100 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" stroke="currentColor" strokeWidth="1">
+                                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        <span className="text-sm text-slate-400 group-hover:text-slate-200 transition-colors">
+                                            Ich akzeptiere die 
+                                            <button 
+                                                type="button" 
+                                                onClick={() => onNavigate(ViewState.AGB)}
+                                                className="text-brand-400 hover:underline font-medium mx-1"
+                                            >
+                                                AGB
+                                            </button>
+                                        </span>
+                                    </label>
                                 </div>
                                 <div className="flex items-center gap-4">
                                     <Button type="button" variant="ghost" onClick={onCancel}>Abbrechen</Button>
-                                    <Button type="submit" disabled={isSubmitting || (formData.filamentMode === 'stock' && !formData.selectedFilamentId)}>{isSubmitting ? "Wird gesendet..." : "Anfrage Absenden"}</Button>
+                                    <Button type="submit" disabled={isSubmitting || !agbAccepted || (formData.filamentMode === 'stock' && !formData.selectedFilamentId)}>{isSubmitting ? "Wird gesendet..." : "Anfrage Absenden"}</Button>
                                 </div>
                             </div>
                         </form>
