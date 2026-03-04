@@ -6,8 +6,7 @@ const path = require('path');
 const crypto = require('crypto');
 
 // --- KONFIGURATION ---
-// HIER DEINE FORMSPREE URL EINFÜGEN!
-const FORMSPREE_URL = "https://formspree.io/f/xjgevaln"; 
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyfFd9vWCUoCBTkq_JKKpLYbtHG76wjBloVwPRut72xm04NMCsTCzlaomktAJcFAtE0Kw/exec"; 
 
 const WHITELISTED_DEVICES = ['7e4cf2', '8ff9a9', '0c6f21', '8bd4f8'];
 
@@ -63,21 +62,22 @@ const writeJsonFile = (filePath, data) => {
 };
 
 const sendEmail = async (subject, message) => {
-    if (!FORMSPREE_URL || FORMSPREE_URL.includes("deine-id")) {
+    if (!GOOGLE_SCRIPT_URL) {
         console.log("Email Simulation (Log):", subject, message);
         return;
     }
     try {
-        await fetch(FORMSPREE_URL, {
+        // Google Script expects form-urlencoded data for e.parameter
+        const params = new URLSearchParams();
+        params.append('subject', subject);
+        params.append('message', message);
+
+        await fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                subject: subject,
-                message: message
-            })
+            body: params
         });
     } catch (error) {
-        console.error("Formspree Error:", error);
+        console.error("Google Script Error:", error);
     }
 };
 
@@ -135,6 +135,33 @@ Bestell-ID: ${newOrder.id}
     await sendEmail(emailSubject, emailBody);
 
     res.status(201).json(newOrder);
+});
+
+app.post('/api/questions', async (req, res) => {
+    const { message } = req.body;
+    const ip = req.ip || req.headers['x-forwarded-for'] || 'Unbekannt';
+    const userAgent = req.headers['user-agent'] || 'Unbekannt';
+
+    if (!message) {
+        return res.status(400).json({ error: 'Nachricht ist erforderlich' });
+    }
+
+    const emailSubject = `Neue Frage von der Webseite`;
+    const emailBody = `
+Eine neue Frage ist über das AGB-Formular eingegangen!
+
+Nachricht:
+${message}
+
+--- Metadaten ---
+IP: ${ip}
+Browser: ${userAgent}
+Zeitpunkt: ${new Date().toLocaleString('de-CH')}
+    `.trim();
+
+    await sendEmail(emailSubject, emailBody);
+
+    res.json({ success: true });
 });
 
 app.put('/api/orders/:id', (req, res) => {
@@ -305,8 +332,8 @@ app.get('*', (req, res) => {
 });
 
 // Start Server
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on http://0.0.0.0:${PORT}`);
     // Initialize DB files if not exist
     if (!fs.existsSync(DATA_FILE)) {
         writeJsonFile(DATA_FILE, []);
