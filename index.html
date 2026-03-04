@@ -1418,6 +1418,53 @@
                                 <Hero onStart={handleStartOrder} />
                                 <HowItWorks />
                             </div>
+                    <section className="py-16 px-4 border-t border-slate-800" id="contact">
+                <div className="max-w-xl mx-auto">
+                    <h2 className="text-3xl font-bold text-center text-white mb-8">
+                        Kontakt <span className="text-blue-500">Mich!</span>
+                    </h2>
+                    
+                    <form action="https://api.web3forms.com/submit" method="POST" className="flex flex-col gap-4">
+                        {/* WICHTIG: Dein Key aus dem Screenshot */}
+                        <input type="hidden" name="access_key" value="d8e8ed2f-a95f-4023-8502-73785a234275" />
+                        
+                        {/* Anti-Spam (Bot-Schutz) */}
+                        <input type="checkbox" name="botcheck" className="hidden" style={{display: 'none'}} />
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <input 
+                                type="text" 
+                                name="name" 
+                                placeholder="Dein Name" 
+                                required 
+                                className="p-3 bg-slate-800 border border-slate-700 rounded-lg text-white outline-none focus:border-blue-500 transition-colors"
+                            />
+                            <input 
+                                type="email" 
+                                name="email" 
+                                placeholder="Deine E-Mail" 
+                                required 
+                                className="p-3 bg-slate-800 border border-slate-700 rounded-lg text-white outline-none focus:border-blue-500 transition-colors"
+                            />
+                        </div>
+                        
+                        <textarea 
+                            name="message" 
+                            placeholder="Deine Nachricht an mich..." 
+                            rows="5" 
+                            required 
+                            className="p-3 bg-slate-800 border border-slate-700 rounded-lg text-white outline-none focus:border-blue-500 transition-colors"
+                        ></textarea>
+                        
+                        <button 
+                            type="submit" 
+                            className="py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg transition-all active:scale-95 shadow-lg shadow-blue-500/20"
+                        >
+                            Nachricht senden
+                        </button>
+                    </form>
+                </div>
+            </section>
                         )}
 
                         {view === ViewState.ORDER && (
