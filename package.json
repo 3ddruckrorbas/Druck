@@ -4,7 +4,9 @@
   "description": "Server für Rorbas 3D Druck",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "dev": "node server.js",
+    "start": "node server.js",
+    "lint": "echo 'No linting needed for this simple project'"
   },
   "dependencies": {
     "express": "^4.18.2",
