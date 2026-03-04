@@ -4,9 +4,10 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const axios = require('axios');
 
 // --- KONFIGURATION ---
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyfFd9vWCUoCBTkq_JKKpLYbtHG76wjBloVwPRut72xm04NMCsTCzlaomktAJcFAtE0Kw/exec"; 
+const WEB3FORMS_ACCESS_KEY = "9d6b429b-d9c1-4806-898e-ddb9ef5333ec"; 
 
 const WHITELISTED_DEVICES = ['7e4cf2', '8ff9a9', '0c6f21', '8bd4f8'];
 
@@ -62,22 +63,20 @@ const writeJsonFile = (filePath, data) => {
 };
 
 const sendEmail = async (subject, message) => {
-    if (!GOOGLE_SCRIPT_URL) {
+    if (!WEB3FORMS_ACCESS_KEY) {
         console.log("Email Simulation (Log):", subject, message);
         return;
     }
     try {
-        // Google Script expects form-urlencoded data for e.parameter
-        const params = new URLSearchParams();
-        params.append('subject', subject);
-        params.append('message', message);
-
-        await fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            body: params
+        await axios.post("https://api.web3forms.com/submit", {
+            access_key: WEB3FORMS_ACCESS_KEY,
+            subject: subject,
+            message: message,
+            from_name: "Rorbas 3D Druck"
         });
+        console.log("[Email] Erfolgreich über Web3Forms gesendet");
     } catch (error) {
-        console.error("Google Script Error:", error);
+        console.error("[Email] Web3Forms Fehler:", error.message);
     }
 };
 
