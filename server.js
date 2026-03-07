@@ -7,7 +7,7 @@ const crypto = require('crypto');
 const axios = require('axios');
 
 // --- KONFIGURATION ---
-const WEB3FORMS_ACCESS_KEY = "d8e8ed2f-a95f-4023-8502-73785a234275"; 
+const FORMSPREE_URL = "https://formspree.io/f/xjgevaln"; 
 
 const WHITELISTED_DEVICES = ['7e4cf2', '8ff9a9', '0c6f21', '8bd4f8'];
 
@@ -63,45 +63,26 @@ const writeJsonFile = (filePath, data) => {
 };
 
 const sendEmail = async (subject, message) => {
-    if (!WEB3FORMS_ACCESS_KEY) {
+    if (!FORMSPREE_URL || FORMSPREE_URL.includes("deine-id")) {
         console.log("Email Simulation (Log):", subject, message);
         return;
     }
     try {
-        console.log(`[Email] Sende Versuch über Web3Forms: ${subject}`);
-        
-        // Wir verwenden URLSearchParams, um FormData-Verhalten zu simulieren
-        const params = new URLSearchParams();
-        params.append("access_key", WEB3FORMS_ACCESS_KEY);
-        params.append("subject", subject);
-        params.append("message", message);
-        params.append("from_name", "Rorbas 3D Druck");
-        params.append("botcheck", "");
-
-        const response = await axios.post("https://api.web3forms.com/submit", params, {
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'Accept': 'application/json'
-            }
+        console.log(`[Email] Sende Versuch über Formspree: ${subject}`);
+        await axios.post(FORMSPREE_URL, {
+            subject: subject,
+            message: message
         });
-        
-        if (response.data.success) {
-            console.log("[Email] Erfolgreich über Web3Forms gesendet:", response.data.message);
-        } else {
-            console.error("[Email] Web3Forms Fehler Antwort:", response.data);
-        }
+        console.log("[Email] Erfolgreich über Formspree gesendet");
     } catch (error) {
-        console.error("[Email] Web3Forms Fehler:", error.message);
-        if (error.response) {
-            console.error("[Email] Web3Forms Server Antwort:", error.response.data);
-        }
+        console.error("[Email] Formspree Fehler:", error.message);
     }
 };
 
 // TEST ROUTE FÜR EMAIL
 app.get('/api/test-email', async (req, res) => {
     try {
-        await sendEmail("Test Email vom Server (Web3Forms)", "Dies ist eine Test-Nachricht, um die Web3Forms Verbindung zu prüfen.");
+        await sendEmail("Test Email vom Server (Formspree)", "Dies ist eine Test-Nachricht, um die Formspree Verbindung zu prüfen.");
         res.json({ success: true, message: "Test-Email wurde getriggert. Prüfe dein Postfach." });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
