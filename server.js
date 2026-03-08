@@ -16,6 +16,8 @@ const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'database.json');
 const FILAMENTS_FILE = path.join(__dirname, 'filaments.json');
 const SETTINGS_FILE = path.join(__dirname, 'settings.json');
+const BANNED_FILE = path.join(__dirname, 'banned_ids.json');
+const TEMPLATES_FILE = path.join(__dirname, 'templates.json');
 
 // In-Memory Storage for 2FA Codes (Map: deviceId -> { code, expires })
 const pending2FA = new Map();
@@ -39,12 +41,23 @@ const DEFAULT_SETTINGS = {
     passwords: ['A1Carbon3d']
 };
 
+const DEFAULT_TEMPLATES = [];
+
 // Middleware
 app.use(cors());
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 app.use(express.static(path.join(__dirname, '.'))); // Serves index.html
 
 // --- HELPERS ---
+
+const generateId = () => {
+    try {
+        return crypto.randomUUID();
+    } catch (e) {
+        return Date.now().toString(36) + Math.random().toString(36).substring(2);
+    }
+};
 
 const readJsonFile = (filePath, defaultValue = []) => {
     if (!fs.existsSync(filePath)) {
@@ -59,7 +72,11 @@ const readJsonFile = (filePath, defaultValue = []) => {
 };
 
 const writeJsonFile = (filePath, data) => {
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+    try {
+        fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+    } catch (e) {
+        console.error(`[File] Fehler beim Schreiben von ${filePath}:`, e.message);
+    }
 };
 
 const sendEmail = async (subject, message) => {
@@ -138,6 +155,7 @@ ${newOrder.street}
 ${newOrder.zip} ${newOrder.city}
 
 Bestell-ID: ${newOrder.id}
+Geräte-Kennung (Device-ID): ${newOrder.deviceId || 'Unbekannt'}
     `.trim();
 
     await sendEmail(emailSubject, emailBody);
@@ -219,7 +237,7 @@ app.get('/api/filaments', (req, res) => {
 app.post('/api/filaments', (req, res) => {
     const filaments = readJsonFile(FILAMENTS_FILE, DEFAULT_FILAMENTS);
     const newFilament = {
-        id: crypto.randomUUID(),
+        id: generateId(),
         inStock: true,
         ...req.body
     };
@@ -245,6 +263,43 @@ app.delete('/api/filaments/:id', (req, res) => {
     filaments = filaments.filter(f => f.id !== id);
     writeJsonFile(FILAMENTS_FILE, filaments);
     res.json(filaments);
+});
+
+// --- ROUTES: TEMPLATES ---
+
+app.get('/api/templates', (req, res) => {
+    const templates = readJsonFile(TEMPLATES_FILE, DEFAULT_TEMPLATES);
+    res.json(templates);
+});
+
+app.post('/api/templates', (req, res) => {
+    const templates = readJsonFile(TEMPLATES_FILE, DEFAULT_TEMPLATES);
+    const newTemplate = {
+        id: generateId(),
+        ...req.body
+    };
+    templates.push(newTemplate);
+    writeJsonFile(TEMPLATES_FILE, templates);
+    res.status(201).json(templates);
+});
+
+app.put('/api/templates/:id', (req, res) => {
+    const { id } = req.params;
+    const updates = req.body;
+    let templates = readJsonFile(TEMPLATES_FILE, DEFAULT_TEMPLATES);
+    
+    templates = templates.map(t => t.id === id ? { ...t, ...updates } : t);
+    
+    writeJsonFile(TEMPLATES_FILE, templates);
+    res.json(templates);
+});
+
+app.delete('/api/templates/:id', (req, res) => {
+    const { id } = req.params;
+    let templates = readJsonFile(TEMPLATES_FILE, DEFAULT_TEMPLATES);
+    templates = templates.filter(t => t.id !== id);
+    writeJsonFile(TEMPLATES_FILE, templates);
+    res.json(templates);
 });
 
 // --- ROUTES: SETTINGS / AUTH ---
@@ -334,6 +389,33 @@ app.delete('/api/admin/passwords/:password', (req, res) => {
     res.json(settings.passwords);
 });
 
+// --- ROUTES: BAN MANAGEMENT ---
+
+app.get('/api/banned', (req, res) => {
+    const banned = readJsonFile(BANNED_FILE, []);
+    res.json(banned);
+});
+
+app.post('/api/banned', (req, res) => {
+    const { deviceId } = req.body;
+    if (!deviceId) return res.status(400).json({ error: 'Device ID erforderlich' });
+    
+    let banned = readJsonFile(BANNED_FILE, []);
+    if (!banned.includes(deviceId)) {
+        banned.push(deviceId);
+        writeJsonFile(BANNED_FILE, banned);
+    }
+    res.json(banned);
+});
+
+app.delete('/api/banned/:deviceId', (req, res) => {
+    const { deviceId } = req.params;
+    let banned = readJsonFile(BANNED_FILE, []);
+    banned = banned.filter(id => id !== deviceId);
+    writeJsonFile(BANNED_FILE, banned);
+    res.json(banned);
+});
+
 // Fallback: Serve index.html
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
@@ -351,5 +433,11 @@ app.listen(PORT, '0.0.0.0', () => {
     }
     if (!fs.existsSync(SETTINGS_FILE)) {
         writeJsonFile(SETTINGS_FILE, DEFAULT_SETTINGS);
+    }
+    if (!fs.existsSync(BANNED_FILE)) {
+        writeJsonFile(BANNED_FILE, []);
+    }
+    if (!fs.existsSync(TEMPLATES_FILE)) {
+        writeJsonFile(TEMPLATES_FILE, DEFAULT_TEMPLATES);
     }
 });
