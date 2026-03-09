@@ -9,8 +9,6 @@ const axios = require('axios');
 // --- KONFIGURATION ---
 const FORMSPREE_URL = "https://formspree.io/f/xjgevaln"; 
 
-const WHITELISTED_DEVICES = ['7e4cf2', '8ff9a9', '0c6f21', '8bd4f8'];
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'database.json');
@@ -18,9 +16,6 @@ const FILAMENTS_FILE = path.join(__dirname, 'filaments.json');
 const SETTINGS_FILE = path.join(__dirname, 'settings.json');
 const BANNED_FILE = path.join(__dirname, 'banned_ids.json');
 const TEMPLATES_FILE = path.join(__dirname, 'templates.json');
-
-// In-Memory Storage for 2FA Codes (Map: deviceId -> { code, expires })
-const pending2FA = new Map();
 
 // Default Filaments (Initial Seed)
 const DEFAULT_FILAMENTS = [
@@ -309,47 +304,9 @@ app.post('/api/auth/login', async (req, res) => {
     const settings = readJsonFile(SETTINGS_FILE, DEFAULT_SETTINGS);
     
     if (settings.passwords.includes(password)) {
-        // Password correct. Check whitelist.
-        // Check if deviceId starts with any of the whitelisted IDs
-        const isWhitelisted = deviceId && WHITELISTED_DEVICES.some(id => deviceId.startsWith(id));
-
-        if (isWhitelisted) {
-            return res.json({ success: true, require2FA: false });
-        } else {
-            // Generate 2FA Code
-            const code = Math.floor(100000 + Math.random() * 900000).toString();
-            const expires = Date.now() + 60 * 60 * 1000; // 1 Hour
-
-            pending2FA.set(deviceId, { code, expires });
-
-            // Send Email via Formspree
-            await sendEmail("Rorbas 3D Admin Login Code", `Dein Login-Code ist: ${code}`);
-
-            return res.json({ success: true, require2FA: true });
-        }
-    } else {
-        res.status(401).json({ success: false, error: 'Ungültiges Passwort' });
-    }
-});
-
-app.post('/api/auth/verify', (req, res) => {
-    const { code, deviceId } = req.body;
-    const record = pending2FA.get(deviceId);
-
-    if (!record) {
-        return res.status(401).json({ success: false, error: 'Kein Code angefordert oder Session abgelaufen.' });
-    }
-
-    if (Date.now() > record.expires) {
-        pending2FA.delete(deviceId);
-        return res.status(401).json({ success: false, error: 'Code abgelaufen.' });
-    }
-
-    if (record.code === code) {
-        pending2FA.delete(deviceId); // Consume code
         return res.json({ success: true });
     } else {
-        return res.status(401).json({ success: false, error: 'Falscher Code.' });
+        res.status(401).json({ success: false, error: 'Ungültiges Passwort' });
     }
 });
 
