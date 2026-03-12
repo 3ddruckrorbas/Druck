@@ -19,17 +19,17 @@ const TEMPLATES_FILE = path.join(__dirname, 'templates.json');
 
 // Default Filaments (Initial Seed)
 const DEFAULT_FILAMENTS = [
-    { id: '1', name: 'PLA Schwarz', color: 'Schwarz', colorHex: '#1a1a1a', material: 'PLA', inStock: true, pricePer100g: 4.50, fixedPriceUnder50g: 5.00 },
-    { id: '2', name: 'PETG Schwarz', color: 'Schwarz', colorHex: '#000000', material: 'PETG', inStock: true, pricePer100g: 5.00, fixedPriceUnder50g: 6.00 },
-    { id: '3', name: 'PLA Weiß', color: 'Weiß', colorHex: '#f5f5f5', material: 'PLA', inStock: true, pricePer100g: 4.50, fixedPriceUnder50g: 5.00 },
-    { id: '4', name: 'PLA Gold', color: 'Gold', colorHex: '#d4af37', material: 'PLA', inStock: true, pricePer100g: 5.50, fixedPriceUnder50g: 7.00 },
-    { id: '5', name: 'PLA Grau', color: 'Grau', colorHex: '#888888', material: 'PLA', inStock: true, pricePer100g: 4.50, fixedPriceUnder50g: 5.00 },
-    { id: '6', name: 'PLA Teak Wood', color: 'Teak Wood', colorHex: '#8B4513', material: 'PLA', inStock: true, pricePer100g: 6.00, fixedPriceUnder50g: 8.00 },
-    { id: '7', name: 'PLA Black Walnut', color: 'Walnut', colorHex: '#C49A6C', material: 'PLA', inStock: true, pricePer100g: 6.00, fixedPriceUnder50g: 8.00 },
-    { id: '8', name: 'TPU A95 Rot', color: 'Rot', colorHex: '#dc2626', material: 'TPU', inStock: true, pricePer100g: 7.50, fixedPriceUnder50g: 10.00 },
-    { id: '9', name: 'TPU A95 Hellgrün', color: 'Hellgrün', colorHex: '#00B08B', material: 'TPU', inStock: true, pricePer100g: 7.50, fixedPriceUnder50g: 10.00 },
-    { id: '10', name: 'PETG Signalblau', color: 'Blau', colorHex: '#2563eb', material: 'PETG', inStock: true, pricePer100g: 5.00, fixedPriceUnder50g: 6.00 },
-    { id: '11', name: 'PETG Transparent', color: 'Klar', colorHex: '#E5E7EB', material: 'PETG', inStock: false, pricePer100g: 5.00, fixedPriceUnder50g: 6.00 },
+    { id: '1', name: 'PLA Schwarz', color: 'Schwarz', colorHex: '#1a1a1a', material: 'PLA', inStock: true },
+    { id: '2', name: 'PETG Schwarz', color: 'Schwarz', colorHex: '#000000', material: 'PETG', inStock: true },
+    { id: '3', name: 'PLA Weiß', color: 'Weiß', colorHex: '#f5f5f5', material: 'PLA', inStock: true },
+    { id: '4', name: 'PLA Gold', color: 'Gold', colorHex: '#d4af37', material: 'PLA', inStock: true },
+    { id: '5', name: 'PLA Grau', color: 'Grau', colorHex: '#888888', material: 'PLA', inStock: true },
+    { id: '6', name: 'PLA Teak Wood', color: 'Teak Wood', colorHex: '#8B4513', material: 'PLA', inStock: true },
+    { id: '7', name: 'PLA Black Walnut', color: 'Walnut', colorHex: '#C49A6C', material: 'PLA', inStock: true },
+    { id: '8', name: 'TPU A95 Rot', color: 'Rot', colorHex: '#dc2626', material: 'TPU', inStock: true },
+    { id: '9', name: 'TPU A95 Hellgrün', color: 'Hellgrün', colorHex: '#00B08B', material: 'TPU', inStock: true },
+    { id: '10', name: 'PETG Signalblau', color: 'Blau', colorHex: '#2563eb', material: 'PETG', inStock: true },
+    { id: '11', name: 'PETG Transparent', color: 'Klar', colorHex: '#E5E7EB', material: 'PETG', inStock: false },
 ];
 
 const DEFAULT_SETTINGS = {
