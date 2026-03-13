@@ -550,10 +550,10 @@
                     <div className="space-y-24">
                         {/* Team Section */}
                         <section className="bg-black/20 backdrop-blur-md border border-white/5 p-12 shadow-2xl text-center">
-                            <h1 className="text-5xl font-serif text-gold mb-12 flex items-center justify-center gap-6">
+                            <h1 className="text-5xl font-serif text-gold mb-12 flex items-center justify-center gap-6 select-none">
                                 <Printer className="h-10 w-10 text-gold/60" /> Über uns
                             </h1>
-                            <div className="max-w-2xl mx-auto text-white/70 leading-relaxed font-light tracking-wide space-y-8">
+                            <div className="max-w-2xl mx-auto text-white/70 leading-relaxed font-light tracking-wide space-y-8 select-none">
                                 <p className="text-lg italic font-serif text-gold/80">
                                     "Zwei Freunde, eine Leidenschaft: Die Perfektion im Detail."
                                 </p>
@@ -591,9 +591,9 @@
                                 <div className="w-24 h-24 rounded-full border border-gold/20 mx-auto mb-8 flex items-center justify-center text-gold/40 group-hover:border-gold/60 transition-all duration-700">
                                     <User className="h-10 w-10" />
                                 </div>
-                                <h3 className="text-2xl font-serif text-gold mb-2">Enrique</h3>
-                                <p className="text-[10px] uppercase tracking-[0.3em] text-white/70 mb-6">3D-Druck & Coding</p>
-                                <p className="text-sm text-white/80 font-light leading-relaxed">
+                                <h3 className="text-2xl font-serif text-gold mb-2 select-none">Enrique</h3>
+                                <p className="text-[10px] uppercase tracking-[0.3em] text-white/70 mb-6 select-none">3D-Druck & Coding</p>
+                                <p className="text-sm text-white/80 font-light leading-relaxed select-none">
                                     Hey ich bin enrique ich bin 14 Jahre alt. Was mich antreibt ist der 3d druck und das coden Verschiedenster Projekte. Mein Ziel: Professioneller Programmierer zu werden.
                                 </p>
                             </div>
@@ -603,9 +603,9 @@
                                 <div className="w-24 h-24 rounded-full border border-gold/20 mx-auto mb-8 flex items-center justify-center text-gold/40 group-hover:border-gold/60 transition-all duration-700">
                                     <User className="h-10 w-10" />
                                 </div>
-                                <h3 className="text-2xl font-serif text-gold mb-2">Jack</h3>
-                                <p className="text-[10px] uppercase tracking-[0.3em] text-white/70 mb-6">3D-Druck & Elektronik</p>
-                                <p className="text-sm text-white/80 font-light leading-relaxed">
+                                <h3 className="text-2xl font-serif text-gold mb-2 select-none">Jack</h3>
+                                <p className="text-[10px] uppercase tracking-[0.3em] text-white/70 mb-6 select-none">3D-Druck & Elektronik</p>
+                                <p className="text-sm text-white/80 font-light leading-relaxed select-none">
                                     Ich bin Jack, bin 15 Jahre alt und Intressiere mich sehr für 3D Drucker und Elektronik, deshalb beginne ich im Sommer 2026 meine Lehre als Elektroniker.
                                 </p>
                             </div>
@@ -985,7 +985,9 @@
             return (
                 <div className="space-y-12">
                     <div className="flex justify-between items-center border-b border-white/5 pb-6">
-                        <h3 className="text-xl font-serif text-gold tracking-tight">Material-Archiv</h3>
+                        <h3 className="text-xl font-serif text-gold tracking-tight select-none">
+                            Material-Archiv
+                        </h3>
                         <Button onClick={() => { setIsAdding(!isAdding); setEditingId(null); }} size="sm" variant="secondary" className="gap-2">
                             {isAdding ? <X className="h-3 w-3"/> : <Plus className="h-3 w-3"/>} 
                             {isAdding ? 'Abbrechen' : 'Neu'}
@@ -1139,8 +1141,12 @@
             return (
                 <div className="space-y-8">
                     <div>
-                        <h3 className="text-2xl font-serif text-gold mb-2">Geräte-Sperrliste</h3>
-                        <p className="text-sm text-white/60 font-light tracking-wide">Gesperrte Geräte sehen nur noch den Block-Screen und können keine Anfragen mehr senden.</p>
+                        <h3 className="text-2xl font-serif text-gold mb-2 select-none">
+                            Geräte-Sperrliste
+                        </h3>
+                        <p className="text-sm text-white/60 font-light tracking-wide select-none">
+                            Gesperrte Geräte sehen nur noch den Block-Screen und können keine Anfragen mehr senden.
+                        </p>
                     </div>
                     
                     <form onSubmit={handleBan} className="flex gap-4">
@@ -1215,10 +1221,12 @@
             return (
                  <div className="space-y-8">
                     <div>
-                        <h3 className="text-2xl font-serif text-gold mb-2 flex items-center gap-3">
+                        <h3 className="text-2xl font-serif text-gold mb-2 flex items-center gap-3 select-none">
                             <Key className="h-6 w-6 opacity-50"/> Admin Zugangsdaten
                         </h3>
-                        <p className="text-white/80 text-sm font-light tracking-wide">Hier können zusätzliche Passwörter für den Admin-Login hinterlegt werden. Diese werden sicher auf dem Server gespeichert.</p>
+                        <p className="text-white/80 text-sm font-light tracking-wide select-none">
+                            Hier können zusätzliche Passwörter für den Admin-Login hinterlegt werden. Diese werden sicher auf dem Server gespeichert.
+                        </p>
                     </div>
                     
                     {error && <div className="p-4 bg-red-900/20 border border-red-500/20 rounded-xl text-red-300 text-sm font-light">{error}</div>}
@@ -1488,6 +1496,24 @@
             const [previewImages, setPreviewImages] = React.useState(null);
             const [activePriceId, setActivePriceId] = React.useState(null);
 
+            const calculatePrice = (filament, weight) => {
+                if (!filament || !weight) return null;
+                const w = parseFloat(weight);
+                if (isNaN(w)) return null;
+
+                let price = 0;
+                if (w < 50 && filament.fixedPriceUnder50g) {
+                    price = parseFloat(filament.fixedPriceUnder50g);
+                } else if (filament.pricePer100g) {
+                    price = (w / 100) * parseFloat(filament.pricePer100g);
+                } else {
+                    return null;
+                }
+                
+                // Round up to the nearest 0.50 (50 Rappen)
+                return Math.ceil(price * 2) / 2;
+            };
+
             const handleSubmit = async (e) => {
                 e.preventDefault();
                 setIsSubmitting(true);
@@ -1583,8 +1609,10 @@
                             {step === 1 && (
                                 <div className="space-y-12 animate-fadeIn">
                                     <div className="space-y-2">
-                                        <label className="block text-3xl font-serif text-white tracking-tight">Was möchtest du <span className="text-gold italic">erschaffen</span>?</label>
-                                        <p className="text-white/70 text-[10px] font-light tracking-[0.3em] uppercase">Wähle deinen Ausgangspunkt</p>
+                                        <label className="block text-3xl font-serif text-white tracking-tight select-none">
+                                            Was möchtest du <span className="text-gold italic">erschaffen</span>?
+                                        </label>
+                                        <p className="text-white/70 text-[10px] font-light tracking-[0.3em] uppercase select-none">Wähle deinen Ausgangspunkt</p>
                                     </div>
                                     
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -1674,9 +1702,13 @@
                                                             </div>
                                                             
                                                             <div className="p-8 flex-grow flex flex-col">
-                                                                <div className="font-serif text-xl text-white mb-2 group-hover:text-gold transition-colors duration-500">{tpl.title}</div>
-                                                                {tpl.weight && <div className="text-[10px] text-gold/60 uppercase tracking-widest mb-2">Gewicht: {tpl.weight}g</div>}
-                                                                <div className="text-sm text-white/70 font-light line-clamp-2 flex-grow leading-relaxed">{tpl.description}</div>
+                                                                <div className="font-serif text-xl text-white mb-2 group-hover:text-gold transition-colors duration-500 select-none">
+                                                                    {tpl.title}
+                                                                </div>
+                                                                {tpl.weight && <div className="text-[10px] text-gold/60 uppercase tracking-widest mb-2 select-none">Gewicht: {tpl.weight}g</div>}
+                                                                <div className="text-sm text-white/70 font-light line-clamp-2 flex-grow leading-relaxed select-none">
+                                                                    {tpl.description}
+                                                                </div>
                                                                 <div className="mt-6 flex items-center justify-between pt-6 border-t border-white/5">
                                                                     <span className="text-[8px] font-bold text-gold uppercase tracking-[0.2em] px-3 py-1 border border-gold/20">Exklusiv</span>
                                                                     <span className={`text-[10px] font-bold uppercase tracking-widest ${formData.selectedTemplateId === tpl.id ? 'text-gold' : 'text-white/50'}`}>
@@ -1997,69 +2029,80 @@
                                                             <label className="block text-[10px] uppercase tracking-[0.2em] font-bold text-white/70 mb-6">2. Farbe wählen</label>
                                                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                                                                 {filteredFilaments.length > 0 ? (
-                                                                    filteredFilaments.map(filament => (
-                                                                        <div key={filament.id} className="relative group">
-                                                                            <button 
-                                                                                type="button" 
-                                                                                disabled={!filament.inStock} 
-                                                                                onClick={() => setFormData({...formData, selectedFilamentId: filament.id})} 
-                                                                                className={`w-full relative p-8 border text-left transition-all duration-700 ${formData.selectedFilamentId === filament.id ? 'border-gold bg-gold/5 ring-1 ring-gold shadow-[0_0_30px_rgba(197,160,89,0.1)]' : 'border-white/5 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04]'} ${!filament.inStock ? 'opacity-30 cursor-not-allowed' : ''}`}
-                                                                            >
-                                                                                <div className="flex items-center justify-between mb-6">
-                                                                                    <div className="w-10 h-10 rounded-full border border-white/10 shadow-2xl transition-transform duration-700 group-hover:scale-110" style={{backgroundColor: filament.colorHex}} />
-                                                                                    <div className="flex items-center gap-2">
-                                                                                        {filament.material === 'TPU' && <span className="text-[8px] font-bold bg-gold/10 px-2 py-1 text-gold tracking-[0.2em] uppercase border border-gold/20">Flex</span>}
-                                                                                        {(filament.pricePer100g || filament.fixedPriceUnder50g) && (
-                                                                                            <div className="relative">
-                                                                                                <button 
-                                                                                                    type="button"
-                                                                                                    onClick={(e) => {
-                                                                                                        e.stopPropagation();
-                                                                                                        setActivePriceId(activePriceId === filament.id ? null : filament.id);
-                                                                                                    }}
-                                                                                                    className={`p-1.5 rounded-full backdrop-blur-md border transition-all ${activePriceId === filament.id ? 'bg-gold text-ebony border-gold' : 'bg-black/60 text-gold border-gold/30 hover:border-gold'}`}
-                                                                                                >
-                                                                                                    <CircleDollarSign className="h-3 w-3" />
-                                                                                                </button>
-                                                                                                
-                                                                                                {activePriceId === filament.id && (
-                                                                                                    <motion.div 
-                                                                                                        initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                                                                                                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                                                                                                        className="absolute bottom-full right-0 mb-2 w-48 bg-ebony border border-gold/30 p-4 shadow-2xl z-50 pointer-events-none"
-                                                                                                    >
-                                                                                                        <div className="space-y-3">
-                                                                                                            <div className="text-[8px] uppercase tracking-[0.2em] text-gold/60 border-b border-white/5 pb-2">Preise für {filament.name}</div>
-                                                                                                            {filament.pricePer100g && (
-                                                                                                                <div className="flex justify-between items-center">
-                                                                                                                    <span className="text-[9px] text-white/50 uppercase tracking-widest">Pro 100g</span>
-                                                                                                                    <span className="text-xs text-gold font-serif">{filament.pricePer100g} CHF</span>
-                                                                                                                </div>
-                                                                                                            )}
-                                                                                                            {filament.fixedPriceUnder50g && (
-                                                                                                                <div className="flex justify-between items-center">
-                                                                                                                    <span className="text-[9px] text-white/50 uppercase tracking-widest">Fix (&lt; 50g)</span>
-                                                                                                                    <span className="text-xs text-gold font-serif">{filament.fixedPriceUnder50g} CHF</span>
-                                                                                                                </div>
-                                                                                                            )}
-                                                                                                        </div>
-                                                                                                        <div className="absolute -bottom-1 right-3 w-2 h-2 bg-ebony border-r border-b border-gold/30 rotate-45" />
-                                                                                                    </motion.div>
-                                                                                                )}
-                                                                                            </div>
-                                                                                        )}
-                                                                                    </div>
-                                                                                </div>
-                                                                                <div className="text-[10px] font-bold text-white uppercase tracking-widest truncate mb-1">{filament.name}</div>
-                                                                                <div className="text-[8px] text-white/50 uppercase tracking-widest">{filament.color}</div>
-                                                                                {!filament.inStock && (
-                                                                                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-[2px]">
-                                                                                        <span className="text-[10px] font-bold text-white tracking-[0.2em] uppercase border border-white/20 px-3 py-1 bg-black/40">Sold Out</span>
+                                                                    filteredFilaments.map(filament => {
+                                                                        const selectedTemplate = formData.projectType === 'templates' ? templates.find(t => t.id === formData.selectedTemplateId) : null;
+                                                                        const calculatedPrice = calculatePrice(filament, selectedTemplate?.weight);
+                                                                        
+                                                                        return (
+                                                                            <div key={filament.id} className="relative group">
+                                                                                {calculatedPrice && (
+                                                                                    <div className="absolute -top-2 -right-2 z-20 bg-gold text-ebony px-3 py-1 text-[10px] font-bold shadow-[0_0_20px_rgba(197,160,89,0.4)] border border-gold/50 animate-scaleIn">
+                                                                                        {calculatedPrice.toFixed(2)} CHF
                                                                                     </div>
                                                                                 )}
-                                                                            </button>
-                                                                        </div>
-                                                                    ))
+                                                                                <button 
+                                                                                    type="button" 
+                                                                                    disabled={!filament.inStock} 
+                                                                                    onClick={() => setFormData({...formData, selectedFilamentId: filament.id})} 
+                                                                                    className={`w-full relative p-8 border text-left transition-all duration-700 ${formData.selectedFilamentId === filament.id ? 'border-gold bg-gold/5 ring-1 ring-gold shadow-[0_0_30px_rgba(197,160,89,0.1)]' : 'border-white/5 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04]'} ${!filament.inStock ? 'opacity-30 cursor-not-allowed' : ''}`}
+                                                                                >
+                                                                                    <div className="flex items-center justify-between mb-6">
+                                                                                        <div className="w-10 h-10 rounded-full border border-white/10 shadow-2xl transition-transform duration-700 group-hover:scale-110" style={{backgroundColor: filament.colorHex}} />
+                                                                                        <div className="flex items-center gap-2">
+                                                                                            {filament.material === 'TPU' && <span className="text-[8px] font-bold bg-gold/10 px-2 py-1 text-gold tracking-[0.2em] uppercase border border-gold/20">Flex</span>}
+                                                                                            {(filament.pricePer100g || filament.fixedPriceUnder50g) && (
+                                                                                                <div className="relative">
+                                                                                                    <button 
+                                                                                                        type="button"
+                                                                                                        onClick={(e) => {
+                                                                                                            e.stopPropagation();
+                                                                                                            setActivePriceId(activePriceId === filament.id ? null : filament.id);
+                                                                                                        }}
+                                                                                                        className={`flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-md border transition-all ${activePriceId === filament.id ? 'bg-gold text-ebony border-gold' : 'bg-black/60 text-gold border-gold/30 hover:border-gold shadow-[0_0_15px_rgba(197,160,89,0.1)] hover:shadow-[0_0_20px_rgba(197,160,89,0.2)]'}`}
+                                                                                                    >
+                                                                                                        <CircleDollarSign className="h-3.5 w-3.5" />
+                                                                                                        <span className="text-[8px] font-bold uppercase tracking-widest">Preise</span>
+                                                                                                    </button>
+                                                                                                    
+                                                                                                    {activePriceId === filament.id && (
+                                                                                                        <motion.div 
+                                                                                                            initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                                                                                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                                                                            className="absolute bottom-full right-0 mb-2 w-48 bg-ebony border border-gold/30 p-4 shadow-2xl z-50 pointer-events-none"
+                                                                                                        >
+                                                                                                            <div className="space-y-3">
+                                                                                                                <div className="text-[8px] uppercase tracking-[0.2em] text-gold/60 border-b border-white/5 pb-2">Preise für {filament.name}</div>
+                                                                                                                {filament.pricePer100g && (
+                                                                                                                    <div className="flex justify-between items-center">
+                                                                                                                        <span className="text-[9px] text-white/50 uppercase tracking-widest">Pro 100g</span>
+                                                                                                                        <span className="text-xs text-gold font-serif">{filament.pricePer100g} CHF</span>
+                                                                                                                    </div>
+                                                                                                                )}
+                                                                                                                {filament.fixedPriceUnder50g && (
+                                                                                                                    <div className="flex justify-between items-center">
+                                                                                                                        <span className="text-[9px] text-white/50 uppercase tracking-widest">Fix (&lt; 50g)</span>
+                                                                                                                        <span className="text-xs text-gold font-serif">{filament.fixedPriceUnder50g} CHF</span>
+                                                                                                                    </div>
+                                                                                                                )}
+                                                                                                            </div>
+                                                                                                            <div className="absolute -bottom-1 right-3 w-2 h-2 bg-ebony border-r border-b border-gold/30 rotate-45" />
+                                                                                                        </motion.div>
+                                                                                                    )}
+                                                                                                </div>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div className="text-[10px] font-bold text-white uppercase tracking-widest truncate mb-1">{filament.name}</div>
+                                                                                    <div className="text-[8px] text-white/50 uppercase tracking-widest">{filament.color}</div>
+                                                                                    {!filament.inStock && (
+                                                                                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-[2px]">
+                                                                                            <span className="text-[10px] font-bold text-white tracking-[0.2em] uppercase border border-white/20 px-3 py-1 bg-black/40">Sold Out</span>
+                                                                                        </div>
+                                                                                    )}
+                                                                                </button>
+                                                                            </div>
+                                                                        );
+                                                                    })
                                                                 ) : (
                                                                     <div className="col-span-full py-12 text-center text-white/20 bg-white/[0.01] border border-white/5 border-dashed">
                                                                         <p className="font-light tracking-widest uppercase text-xs">Keine Farben verfügbar.</p>
@@ -2348,12 +2391,12 @@
                                 Handgefertigt in Rorbas
                             </div>
                             
-                            <h1 className="text-5xl md:text-8xl font-serif text-white mb-12 leading-[1.1] tracking-tight animate-slow-slide">
+                            <h1 className="text-5xl md:text-8xl font-serif text-white mb-12 leading-[1.1] tracking-tight animate-slow-slide select-none">
                                 Deine Visionen. <br />
                                 <span className="text-gold italic">Dreidimensional.</span>
                             </h1>
                             
-                            <p className="text-lg md:text-xl text-white/70 mb-16 leading-relaxed font-light tracking-wide max-w-2xl mx-auto animate-fadeIn" style={{ animationDelay: '0.5s' }}>
+                            <p className="text-lg md:text-xl text-white/70 mb-16 leading-relaxed font-light tracking-wide max-w-2xl mx-auto animate-fadeIn select-none" style={{ animationDelay: '0.5s' }}>
                                 Willkommen bei Rorbas 3D Druck. Enrique und Jack realisieren deine Projekte mit höchster Präzision und Leidenschaft für das Handwerk.
                             </p>
 
@@ -2389,10 +2432,10 @@
                                             <ChevronDown className="h-5 w-5" />
                                         </div>
                                     </div>
-                                    <h3 className={`text-2xl font-serif mb-4 transition-colors duration-700 ${activeFeature === idx ? 'text-gold' : 'text-white'}`}>{feature.title}</h3>
+                                    <h3 className={`text-2xl font-serif mb-4 transition-colors duration-700 select-none ${activeFeature === idx ? 'text-gold' : 'text-white'}`}>{feature.title}</h3>
                                     <div className="relative">
-                                        <p className={`text-sm text-white/70 font-light leading-relaxed transition-all duration-700 ${activeFeature === idx ? 'opacity-0 h-0' : 'opacity-100'}`}>{feature.desc}</p>
-                                        <p className={`text-sm text-white/80 font-light leading-relaxed transition-all duration-700 ${activeFeature === idx ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 absolute top-0 left-0 pointer-events-none'}`}>{feature.details}</p>
+                                        <p className={`text-sm text-white/70 font-light leading-relaxed transition-all duration-700 select-none ${activeFeature === idx ? 'opacity-0 h-0' : 'opacity-100'}`}>{feature.desc}</p>
+                                        <p className={`text-sm text-white/80 font-light leading-relaxed transition-all duration-700 select-none ${activeFeature === idx ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 absolute top-0 left-0 pointer-events-none'}`}>{feature.details}</p>
                                     </div>
                                     <div className={`mt-6 text-[8px] font-bold text-gold uppercase tracking-[0.3em] transition-opacity duration-700 ${activeFeature === idx ? 'opacity-0 h-0' : 'opacity-100'}`}>Details</div>
                                 </div>
@@ -2414,8 +2457,8 @@
                 <section id="how-it-works" className="py-32 bg-ebony relative overflow-hidden">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                         <div className="text-center mb-24">
-                            <h2 className="text-4xl md:text-5xl font-serif text-white mb-6 tracking-tight">Der Weg zum <span className="text-gold">Unikat</span></h2>
-                            <p className="text-white/70 font-light tracking-widest uppercase text-[10px]">In drei exklusiven Schritten</p>
+                            <h2 className="text-4xl md:text-5xl font-serif text-white mb-6 tracking-tight select-none">Der Weg zum <span className="text-gold">Unikat</span></h2>
+                            <p className="text-white/70 font-light tracking-widest uppercase text-[10px] select-none">In drei exklusiven Schritten</p>
                         </div>
                         <div className="relative">
                             <div className="hidden md:block absolute top-1/2 left-0 w-full h-px bg-white/5 -translate-y-1/2 z-0"></div>
@@ -2430,8 +2473,8 @@
                                             <div className="text-gold transition-transform duration-700 group-hover:scale-110">{step.icon}</div>
                                             <div className="absolute -bottom-4 bg-gold text-ebony text-[8px] font-bold px-3 py-1 uppercase tracking-widest">Phase {idx + 1}</div>
                                         </div>
-                                        <h3 className="text-2xl font-serif text-white mb-4 transition-colors duration-700 group-hover:text-gold">{step.title}</h3>
-                                        <p className="text-white/40 text-sm font-light leading-relaxed max-w-xs">{step.desc}</p>
+                                        <h3 className="text-2xl font-serif text-white mb-4 transition-colors duration-700 group-hover:text-gold select-none">{step.title}</h3>
+                                        <p className="text-white/40 text-sm font-light leading-relaxed max-w-xs select-none">{step.desc}</p>
                                     </div>
                                 ))}
                             </div>
@@ -2448,8 +2491,8 @@
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-16">
                             <div className="col-span-1 md:col-span-2">
-                                <h3 className="text-white font-serif text-2xl mb-6">Rorbas<span className="text-gold">3D</span></h3>
-                                <p className="mb-8 text-sm font-light leading-relaxed max-w-sm">
+                                <h3 className="text-white font-serif text-2xl mb-6 select-none">Rorbas<span className="text-gold">3D</span></h3>
+                                <p className="mb-8 text-sm font-light leading-relaxed max-w-sm select-none">
                                     Wir verwandeln digitale Träume in greifbare Realität. Lokal, präzise und mit einem Auge für das Außergewöhnliche.
                                 </p>
                                 <div className="flex gap-6">
