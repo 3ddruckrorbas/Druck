@@ -477,7 +477,7 @@
                             <div className="space-y-12">
                                 <section className="border-t border-white/5 pt-8">
                                     <h2 className="text-xs uppercase tracking-[0.3em] text-gold/80 mb-4">§1 Geltungsbereich</h2>
-                                    <p>Diese Allgemeinen Geschäftsbedingungen gelten für die Nutzung der Webseite https://3ddruckrorbas.ch durch private Nutzer.</p>
+                                    <p>Diese Allgemeinen Geschäftsbedingungen gelten für die Nutzung der Webseite https://3ddruckrorbas.github.io/Druck/ durch private Nutzer.</p>
                                 </section>
 
                                 <section className="border-t border-white/5 pt-8">
@@ -594,7 +594,7 @@
                                 <h3 className="text-2xl font-serif text-gold mb-2 select-none">Enrique</h3>
                                 <p className="text-[10px] uppercase tracking-[0.3em] text-white/70 mb-6 select-none">3D-Druck & Coding</p>
                                 <p className="text-sm text-white/80 font-light leading-relaxed select-none">
-                                    Hey ich bin Enrique ich bin 14 Jahre alt. Was mich antreibt ist der 3D Druck und das Coden verschiedenster Projekte. Mein Ziel: Professioneller Programmierer zu werden.
+                                    Hey ich bin enrique ich bin 14 Jahre alt. Was mich antreibt ist der 3d druck und das coden Verschiedenster Projekte. Mein Ziel: Professioneller Programmierer zu werden.
                                 </p>
                             </div>
 
@@ -616,7 +616,7 @@
         };
 
         // My Orders View
-        const MyOrdersView = ({ deviceId, onBack }) => {
+        const MyOrdersView = ({ deviceId, onBack, onStartOrder }) => {
             const [orders, setOrders] = React.useState([]);
             const [loading, setLoading] = React.useState(true);
 
@@ -648,7 +648,7 @@
                         <div className="text-center py-32 bg-white/[0.02] border border-white/5 rounded-2xl">
                             <Box className="h-12 w-12 text-white/10 mx-auto mb-6" />
                             <p className="text-white/70 font-light tracking-wide">Du hast noch keine aktiven Bestellungen auf diesem Gerät.</p>
-                            <Button onClick={onBack} variant="outline" className="mt-8">Jetzt Projekt starten</Button>
+                            <Button onClick={onStartOrder} variant="outline" className="mt-8">Jetzt Projekt starten</Button>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 gap-6">
@@ -1471,7 +1471,11 @@
                 projectType: 'describe', // 'describe', 'qrcode', 'templates'
                 projectDescription: '',
                 selectedTemplateId: null,
+                qrType: 'website',
                 qrUrl: '',
+                qrWifiSsid: '',
+                qrWifiPassword: '',
+                qrWifiEncryption: 'WPA2',
                 qrSize: '10x10',
                 qrNfc: false,
                 qrForegroundColorId: null,
@@ -1495,6 +1499,11 @@
             const [agbAccepted, setAgbAccepted] = React.useState(false);
             const [previewImages, setPreviewImages] = React.useState(null);
             const [activePriceId, setActivePriceId] = React.useState(null);
+
+            const handleStepChange = (newStep) => {
+                setStep(newStep);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            };
 
             const calculatePrice = (filament, weight) => {
                 if (!filament || !weight) return null;
@@ -1535,7 +1544,17 @@
                     const tpl = templates.find(t => t.id === formData.selectedTemplateId);
                     finalDescription = `VORLAGE: ${tpl?.title}\nBeschreibung: ${tpl?.description}\n\nZusatzinfos: ${formData.projectDescription}`;
                 } else if (formData.projectType === 'qrcode') {
-                    finalDescription = `QR-CODE ANFRAGE\nURL: ${formData.qrUrl}\nGröße: ${formData.qrSize} cm\nNFC Funktion: ${formData.qrNfc ? `JA (+ ${NFC_SURCHARGE.toFixed(2)} CHF)` : 'NEIN'}\n\nZusatzinfos: ${formData.projectDescription}`;
+                    let qrContent = '';
+                    if (formData.qrType === 'website') {
+                        qrContent = `Typ: Webseite\nURL: ${formData.qrUrl}`;
+                    } else if (formData.qrType === 'google_review') {
+                        qrContent = `Typ: Google Bewertung\nURL: ${formData.qrUrl}`;
+                    } else if (formData.qrType === 'wifi') {
+                        qrContent = `Typ: WLAN\nSSID: ${formData.qrWifiSsid}\nPasswort: ${formData.qrWifiPassword}\nVerschlüsselung: ${formData.qrWifiEncryption}`;
+                    } else if (formData.qrType === 'other') {
+                        qrContent = `Typ: Sonstiges\nInhalt: ${formData.qrUrl}`;
+                    }
+                    finalDescription = `QR-CODE ANFRAGE\n${qrContent}\nGröße: ${formData.qrSize} cm\nNFC Funktion: ${formData.qrNfc ? `JA (+ ${NFC_SURCHARGE.toFixed(2)} CHF)` : 'NEIN'}\n\nZusatzinfos: ${formData.projectDescription}`;
                 }
 
                 try {
@@ -1564,7 +1583,12 @@
             const isStep1Valid = () => {
                 if (formData.projectType === 'describe') return formData.projectDescription.trim().length > 0;
                 if (formData.projectType === 'templates') return formData.selectedTemplateId !== null;
-                if (formData.projectType === 'qrcode') return formData.qrUrl.trim().length > 0;
+                if (formData.projectType === 'qrcode') {
+                    if (formData.qrType === 'wifi') {
+                        return formData.qrWifiSsid.trim().length > 0;
+                    }
+                    return formData.qrUrl.trim().length > 0;
+                }
                 return true;
             };
 
@@ -1791,18 +1815,89 @@
 
                                     {formData.projectType === 'qrcode' && (
                                         <div className="space-y-10 animate-fadeIn">
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                                                <div className="space-y-4">
-                                                    <label className="block text-[10px] uppercase tracking-[0.2em] font-bold text-white/70">QR-Code Ziel (Link)</label>
-                                                    <input 
-                                                        type="url" 
-                                                        required 
-                                                        className="w-full bg-transparent border-b border-white/10 p-0 py-4 text-white placeholder-white/40 focus:border-gold outline-none transition-all font-light" 
-                                                        placeholder="https://deine-website.de" 
-                                                        value={formData.qrUrl} 
-                                                        onChange={(e) => setFormData({...formData, qrUrl: e.target.value})} 
-                                                    />
+                                            <div className="space-y-4">
+                                                <label className="block text-[10px] uppercase tracking-[0.2em] font-bold text-white/70">QR-Code Typ</label>
+                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                                    {[
+                                                        { id: 'website', label: 'Webseite' },
+                                                        { id: 'google_review', label: 'Google Bewertung' },
+                                                        { id: 'wifi', label: 'WLAN' },
+                                                        { id: 'other', label: 'Sonstiges' }
+                                                    ].map(type => (
+                                                        <button 
+                                                            key={type.id}
+                                                            type="button"
+                                                            onClick={() => setFormData({...formData, qrType: type.id})}
+                                                            className={`py-3 border text-[10px] font-bold uppercase tracking-widest transition-all ${formData.qrType === type.id ? 'bg-gold text-black border-gold' : 'bg-white/[0.02] text-white/70 border-white/5 hover:border-white/20'}`}
+                                                        >
+                                                            {type.label}
+                                                        </button>
+                                                    ))}
                                                 </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                                {formData.qrType === 'wifi' ? (
+                                                    <div className="space-y-4 md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
+                                                        <div className="space-y-4">
+                                                            <label className="block text-[10px] uppercase tracking-[0.2em] font-bold text-white/70">SSID (Netzwerkname)</label>
+                                                            <input 
+                                                                type="text" 
+                                                                required 
+                                                                className="w-full bg-transparent border-b border-white/10 p-0 py-4 text-white placeholder-white/40 focus:border-gold outline-none transition-all font-light" 
+                                                                placeholder="Mein WLAN" 
+                                                                value={formData.qrWifiSsid} 
+                                                                onChange={(e) => setFormData({...formData, qrWifiSsid: e.target.value})} 
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-4">
+                                                            <label className="block text-[10px] uppercase tracking-[0.2em] font-bold text-white/70">Passwort</label>
+                                                            <input 
+                                                                type="text" 
+                                                                className="w-full bg-transparent border-b border-white/10 p-0 py-4 text-white placeholder-white/40 focus:border-gold outline-none transition-all font-light" 
+                                                                placeholder="GeheimesPasswort123" 
+                                                                value={formData.qrWifiPassword} 
+                                                                onChange={(e) => setFormData({...formData, qrWifiPassword: e.target.value})} 
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-4">
+                                                            <label className="block text-[10px] uppercase tracking-[0.2em] font-bold text-white/70">Verschlüsselung</label>
+                                                            <select 
+                                                                className="w-full bg-ebony border-b border-white/10 p-0 py-4 text-white focus:border-gold outline-none transition-all font-light appearance-none" 
+                                                                value={formData.qrWifiEncryption} 
+                                                                onChange={(e) => setFormData({...formData, qrWifiEncryption: e.target.value})}
+                                                            >
+                                                                <option value="WPA">WPA</option>
+                                                                <option value="WPA2">WPA2</option>
+                                                                <option value="WPA3">WPA3</option>
+                                                                <option value="WEP">WEP</option>
+                                                                <option value="keins">keins</option>
+                                                            </select>
+                                                        </div>
+                                                        <div className="md:col-span-3 mt-2">
+                                                            <p className="text-[10px] text-white/40 italic">Hinweis: Bitte überprüfe die eingegebenen WLAN-Daten sorgfältig. Wir haften nicht für fehlerhaft angegebene Netzwerkinformationen.</p>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-4">
+                                                        <label className="block text-[10px] uppercase tracking-[0.2em] font-bold text-white/70">
+                                                            {formData.qrType === 'website' ? 'QR-Code Ziel (Link)' : 
+                                                             formData.qrType === 'google_review' ? 'Link zur Google Bewertung' : 
+                                                             'Inhalt (Text oder Link)'}
+                                                        </label>
+                                                        <input 
+                                                            type={formData.qrType === 'other' ? 'text' : 'url'} 
+                                                            required 
+                                                            className="w-full bg-transparent border-b border-white/10 p-0 py-4 text-white placeholder-white/40 focus:border-gold outline-none transition-all font-light" 
+                                                            placeholder={formData.qrType === 'website' ? 'https://deine-website.de' : 
+                                                                         formData.qrType === 'google_review' ? 'https://g.page/r/...' : 
+                                                                         'Dein Text oder Link'} 
+                                                            value={formData.qrUrl} 
+                                                            onChange={(e) => setFormData({...formData, qrUrl: e.target.value})} 
+                                                        />
+                                                    </div>
+                                                )}
+
                                                 <div className="space-y-4">
                                                     <label className="block text-[10px] uppercase tracking-[0.2em] font-bold text-white/70">Größe (max 15x15 cm)</label>
                                                     <div className="flex gap-3">
@@ -1868,7 +1963,7 @@
 
                                     <div className="pt-12 flex justify-between border-t border-white/5">
                                         <Button type="button" variant="ghost" onClick={onCancel}>Abbrechen</Button>
-                                        <Button type="button" onClick={() => setStep(2)} disabled={!isStep1Valid()}>
+                                        <Button type="button" onClick={() => handleStepChange(2)} disabled={!isStep1Valid()}>
                                             Weiter zu Material
                                         </Button>
                                     </div>
@@ -2133,8 +2228,8 @@
                                     )}
 
                                     <div className="pt-12 flex justify-between border-t border-white/5">
-                                        <Button type="button" variant="ghost" onClick={() => setStep(1)}>Zurück</Button>
-                                        <Button type="button" onClick={() => setStep(3)} disabled={!isStep2Valid()}>Weiter zu Kontaktdaten</Button>
+                                        <Button type="button" variant="ghost" onClick={() => handleStepChange(1)}>Zurück</Button>
+                                        <Button type="button" onClick={() => handleStepChange(3)} disabled={!isStep2Valid()}>Weiter zu Kontaktdaten</Button>
                                     </div>
                                 </div>
                             )}
@@ -2208,7 +2303,7 @@
                                     </div>
 
                                     <div className="pt-12 border-t border-white/5 flex justify-between items-center">
-                                        <Button type="button" variant="ghost" onClick={() => setStep(formData.projectType === 'qrcode' ? 1 : 2)}>Zurück</Button>
+                                        <Button type="button" variant="ghost" onClick={() => handleStepChange(formData.projectType === 'qrcode' ? 1 : 2)}>Zurück</Button>
                                         <Button type="submit" disabled={isSubmitting || !isStep3Valid()} className="px-12">
                                             {isSubmitting ? "Wird übermittelt..." : "Anfrage verbindlich absenden"}
                                         </Button>
@@ -2568,27 +2663,31 @@
                 ApiService.getTemplates().then(setTemplates);
             }, []);
 
-            const handleStartOrder = () => {
-                setView(ViewState.ORDER);
+            const handleNavigate = (newView) => {
+                setView(newView);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+
+            const handleStartOrder = () => {
+                handleNavigate(ViewState.ORDER);
             };
 
             const handleOrderSuccess = () => {
                 // Update state immediately without reload
                 setHasOrders(true);
-                setView(ViewState.SUCCESS);
+                handleNavigate(ViewState.SUCCESS);
                 // Background refresh to ensure sync
                 ApiService.getOrders(deviceId).then(orders => setHasOrders(orders.length > 0));
             };
             
             const handleAdminLogin = (user) => {
                 setCurrentUser(user);
-                setView(ViewState.ADMIN_DASHBOARD);
+                handleNavigate(ViewState.ADMIN_DASHBOARD);
             };
 
             const handleLogout = () => {
                 setCurrentUser(null);
-                setView(ViewState.HOME);
+                handleNavigate(ViewState.HOME);
             };
 
             if (view === ViewState.BANNED) {
@@ -2599,13 +2698,13 @@
                 <div className="min-h-screen bg-ebony flex flex-col font-sans">
                     {/* Navbar hides on Admin Dashboard or Banned to focus view */}
                     {view !== ViewState.ADMIN_DASHBOARD && view !== ViewState.ADMIN_LOGIN && view !== ViewState.BANNED && (
-                        <Navbar currentView={view} onNavigate={setView} hasOrders={hasOrders} />
+                        <Navbar currentView={view} onNavigate={handleNavigate} hasOrders={hasOrders} />
                     )}
                     
                     <main className="flex-grow pt-16">
                         {view === ViewState.HOME && (
                             <div className="animate-fadeIn">
-                                <Hero onStart={handleStartOrder} onNavigate={setView} />
+                                <Hero onStart={handleStartOrder} onNavigate={handleNavigate} />
                                 <HowItWorks />
                             </div>
                         )}
@@ -2613,12 +2712,12 @@
                         {view === ViewState.ORDER && (
                             <div className="animate-slideUp">
                                 <OrderForm 
-                                    onCancel={() => setView(ViewState.HOME)} 
+                                    onCancel={() => handleNavigate(ViewState.HOME)} 
                                     onSubmitSuccess={handleOrderSuccess}
                                     deviceId={deviceId}
                                     stockFilaments={filaments}
                                     templates={templates}
-                                    onNavigate={setView}
+                                    onNavigate={handleNavigate}
                                 />
                             </div>
                         )}
@@ -2633,23 +2732,23 @@
                                     <h2 className="text-4xl font-serif text-white mb-6 tracking-tight">Anfrage <span className="text-gold">übermittelt</span></h2>
                                     <p className="text-white/60 mb-12 font-light leading-relaxed tracking-wide">Vielen Dank für dein Vertrauen. Wir haben deine Anfrage erhalten und werden diese mit höchster Sorgfalt prüfen. Du findest alle Details in deinem persönlichen Verlauf.</p>
                                     <div className="flex flex-col gap-4">
-                                        <Button onClick={() => setView(ViewState.MY_ORDERS)} variant="primary" size="lg">Meine Bestellung ansehen</Button>
-                                        <Button onClick={() => setView(ViewState.HOME)} variant="ghost">Zurück zur Startseite</Button>
+                                        <Button onClick={() => handleNavigate(ViewState.MY_ORDERS)} variant="primary" size="lg">Meine Bestellung ansehen</Button>
+                                        <Button onClick={() => handleNavigate(ViewState.HOME)} variant="ghost">Zurück zur Startseite</Button>
                                     </div>
                                 </div>
                             </div>
                         )}
 
-                        {view === ViewState.AGB && <AGBView onBack={() => setView(ViewState.HOME)} />}
+                        {view === ViewState.AGB && <AGBView onBack={() => handleNavigate(ViewState.HOME)} />}
 
-                        {view === ViewState.ABOUT_US && <AboutUsView onBack={() => setView(ViewState.HOME)} />}
+                        {view === ViewState.ABOUT_US && <AboutUsView onBack={() => handleNavigate(ViewState.HOME)} />}
 
                         {view === ViewState.MY_ORDERS && (
-                            <MyOrdersView deviceId={deviceId} onBack={() => setView(ViewState.HOME)} />
+                            <MyOrdersView deviceId={deviceId} onBack={() => handleNavigate(ViewState.HOME)} onStartOrder={handleStartOrder} />
                         )}
 
                         {view === ViewState.ADMIN_LOGIN && (
-                            <AdminLoginView onLogin={handleAdminLogin} onBack={() => setView(ViewState.HOME)} />
+                            <AdminLoginView onLogin={handleAdminLogin} onBack={() => handleNavigate(ViewState.HOME)} />
                         )}
 
                         {view === ViewState.ADMIN_DASHBOARD && (
@@ -2660,7 +2759,7 @@
                     </main>
 
                     {view !== ViewState.ADMIN_DASHBOARD && view !== ViewState.ADMIN_LOGIN && view !== ViewState.BANNED && (
-                        <Footer onNavigate={setView} />
+                        <Footer onNavigate={handleNavigate} />
                     )}
                 </div>
             );
