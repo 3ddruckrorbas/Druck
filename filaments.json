@@ -108,5 +108,15 @@
     "inStock": false,
     "pricePer100g": 5,
     "fixedPriceUnder50g": 6
+  },
+  {
+    "id": "5197034a-81c1-459d-8028-7185c9926e79",
+    "inStock": true,
+    "name": "Hellblau TPU",
+    "color": "Light Blue",
+    "colorHex": "#1f90d6",
+    "material": "TPU",
+    "pricePer100g": "5",
+    "fixedPriceUnder50g": "9"
   }
 ]
