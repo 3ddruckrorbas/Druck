@@ -1648,7 +1648,15 @@
                     }
                 }
                 if (formData.projectType === 'qrcode') {
-                    return formData.qrForegroundColorId !== null && formData.qrBackgroundColorId !== null;
+                    if (formData.qrForegroundColorId !== null && formData.qrBackgroundColorId !== null) {
+                        const fg = stockFilaments.find(f => f.id === formData.qrForegroundColorId);
+                        const bg = stockFilaments.find(f => f.id === formData.qrBackgroundColorId);
+                        if (fg && bg && fg.material !== bg.material) {
+                            return false; // Materials must match
+                        }
+                        return true;
+                    }
+                    return false;
                 }
                 if (formData.filamentMode === 'stock') return formData.selectedFilamentId !== null;
                 if (formData.filamentMode === 'custom') return formData.customFilamentRequest.trim().length > 0;
@@ -2107,6 +2115,26 @@
                                                         ))}
                                                     </div>
                                                 </div>
+
+                                                {/* Material Mismatch Error */}
+                                                {formData.qrForegroundColorId && formData.qrBackgroundColorId && (() => {
+                                                    const fg = stockFilaments.find(f => f.id === formData.qrForegroundColorId);
+                                                    const bg = stockFilaments.find(f => f.id === formData.qrBackgroundColorId);
+                                                    if (fg && bg && fg.material !== bg.material) {
+                                                        return (
+                                                            <div className="p-6 bg-red-950/20 border border-red-500/30 flex items-start gap-4 animate-fadeIn">
+                                                                <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                                                                <div>
+                                                                    <h4 className="text-red-400 text-sm font-bold mb-1">Unterschiedliche Materialien gewählt</h4>
+                                                                    <p className="text-red-400/80 text-xs font-light leading-relaxed">
+                                                                        Vordergrund ({fg.material}) und Hintergrund ({bg.material}) müssen aus dem gleichen Material bestehen, da sich verschiedene Kunststoffe beim Drucken nicht gut miteinander verbinden lassen. Bitte wähle zwei Farben des gleichen Materials.
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    }
+                                                    return null;
+                                                })()}
                                             </div>
                                         </div>
                                     ) : (
